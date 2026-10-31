@@ -25,6 +25,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // The unit-test host must not prompt for calendar access or schedule alerts.
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return }
+        #if DEBUG
+        // `make screenshots`: render the App Store screenshots from fixtures, then quit.
+        if ScreenshotMode.isRequested {
+            Task { @MainActor in ScreenshotMode.run() }
+            return
+        }
+        #endif
         Task { @MainActor in AppModel.shared.start() }
     }
 

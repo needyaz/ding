@@ -56,6 +56,20 @@ logs:
 build: generate
 	$(XCODEBUILD) -quiet build
 
+.PHONY: screenshots
+## [Build] Render the App Store screenshots from the real views with fixture data (quits a running Ding)
+screenshots: build stop
+	@mkdir -p listing/screenshots/en-US
+	@rm -f "$(HOME)/Library/Containers/$(BUNDLE_ID)/Data/tmp/shots/"*.png
+	@sleep 2  # LaunchServices needs a moment after the quit
+	@# Launch in screenshot mode, then `open` the running app again: for the regular app it becomes during this run, that
+	@# brings it forward. Controls only draw in their live colors (not dimmed) in an active app.
+	@open -W $(APP_PATH) --args --screenshots & \
+	  sleep 3; open $(APP_PATH); wait
+	@rm -f listing/screenshots/en-US/*.png   # so a renamed or removed scene can't leave a stale file behind
+	@cp "$(HOME)/Library/Containers/$(BUNDLE_ID)/Data/tmp/shots/"*.png listing/screenshots/en-US/
+	@ls -1 listing/screenshots/en-US
+
 # The Xcode project is generated from project.yml and gitignored. build/test depend on this
 # (it's fast) so newly added source files are always picked up.
 .PHONY: generate

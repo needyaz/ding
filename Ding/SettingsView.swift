@@ -2,26 +2,56 @@ import SwiftUI
 import KeyboardShortcuts
 import DingCore
 
+enum SettingsTab: String, CaseIterable {
+    case general, calendars, meetings, notifications, shortcuts, aiAccess
+}
+
 struct SettingsView: View {
     let model: AppModel
+    /// The helper path shown on the AI Access tab; nil looks it up in this app's bundle.
+    var helperPath: String?? = nil
+    var contentHeight: CGFloat = 440
+    @State private var selection: SettingsTab
+
+    init(model: AppModel, initialTab: SettingsTab = .general, helperPath: String?? = nil, contentHeight: CGFloat = 440) {
+        self.model = model
+        self.helperPath = helperPath
+        self.contentHeight = contentHeight
+        _selection = State(initialValue: initialTab)
+    }
 
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             GeneralTab()
                 .tabItem { Label("General", systemImage: "gearshape") }
+                .tag(SettingsTab.general)
             CalendarsTab(model: model)
                 .tabItem { Label("Calendars", systemImage: "calendar") }
+                .tag(SettingsTab.calendars)
             MeetingsTab()
                 .tabItem { Label("Meetings", systemImage: "video") }
+                .tag(SettingsTab.meetings)
             AlertsTab(model: model)
                 .tabItem { Label("Notifications", systemImage: "bell") }
+                .tag(SettingsTab.notifications)
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
-            AssistantsTab()
+                .tag(SettingsTab.shortcuts)
+            assistantsTab
                 .tabItem { Label("AI Access", systemImage: "sparkles") }
+                .tag(SettingsTab.aiAccess)
         }
-        .frame(width: 480, height: 440)
+        .frame(width: 480, height: contentHeight)
         .scenePadding()
+    }
+
+    @ViewBuilder
+    private var assistantsTab: some View {
+        if let helperPath {
+            AssistantsTab(helperPath: helperPath)
+        } else {
+            AssistantsTab()
+        }
     }
 }
 

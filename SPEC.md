@@ -175,6 +175,7 @@ Anything that touches the system sits behind a small protocol or closure so test
 
 - `project.yml` (XcodeGen) generates `Ding.xcodeproj`, which isn't checked in.
 - A `Makefile` with the same conventions as the author's other projects: `make` lists targets, `make menu` is an fzf picker, `make run` builds and launches, `make test`, `make coverage`, `make mcp-smoke` (handshake and tool list through the bundled helper). The app tests run inside Ding, which allows only one instance, so `make test-app` quits a running Ding first.
+- `make screenshots` renders the App Store screenshots from the real views with fixture data (debug builds only; see `listing/README.md`).
 - `design/make_icon.py` builds the app icon set from the source art in `design/`. The menu bar glyph is drawn in code (`MenuBarGlyph`).
 
 ## Testing
@@ -187,6 +188,7 @@ Anything that touches the system sits behind a small protocol or closure so test
   input); the transport against real Unix sockets (framing, concurrency, a refused peer, an oversized or half-sent frame, a server that never answers); and
   the two together end to end with a stand-in for the app. The app side tests the permissions, the privacy guarantee (no response ever contains a link or
   passcode) and the real listener in the app's sandbox. Test models never start the control server, because the socket belongs to the running app.
+- The screenshot mode's fixtures and output shape are pinned by tests (size, file naming, a frozen clock, nothing real in the data).
 - Nothing in tests touches the real system. The notification center, browsers and workspace, EventKit, login items and windows all sit behind protocols or closures, and tests use fakes. (An early version of the tests scheduled real notifications; this is the rule that came out of it.)
 - `make coverage` prints line coverage: about 99.6% for core and 93% for the app. The uncovered remainder is code whose only job is to call the real OS (opening apps, the live notification center, registering a login item) and a few view button closures.
 - **Still manual:** a pass of the test matrix on a real Mac (iCloud, Google and Exchange accounts; sleep/wake; time zone and DST changes; multiple displays for alerts; notifications and hotkeys).
@@ -229,6 +231,7 @@ App Store submission, and flipping the GitHub repo public.
 
 - The name is **Ding**. Trademark and App Store availability checks are not being pursued.
 - The icon stays a plain asset-catalog icon; Icon Composer is not needed.
+- The App Store name is **Ding: Meeting Countdown**. The app is called **Ding** everywhere else: on the Mac, in the menu bar and on the website.
 - The spec is updated in the same change as any behavior change.
 - No CI. Tests run locally (`make test`).
 - The MCP server ships **inside the app bundle**, so people get it automatically. No separate install, and no command-line tool unless one is

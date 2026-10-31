@@ -141,6 +141,8 @@ struct FullScreenAlertView: View {
     let join: () -> Void
     let snooze: () -> Void
     let dismiss: () -> Void
+    /// Show this moment instead of the live clock.
+    var fixedNow: Date? = nil
 
     var body: some View {
         ZStack {
@@ -152,7 +154,7 @@ struct FullScreenAlertView: View {
                         .multilineTextAlignment(.center)
                         .lineLimit(3)
                     TimelineView(.periodic(from: .now, by: 1)) { context in
-                        Text(EventDisplay.alertStatus(now: context.date, start: event.start))
+                        Text(EventDisplay.alertStatus(now: fixedNow ?? context.date, start: event.start))
                             .font(.system(size: 24, weight: .regular).monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
