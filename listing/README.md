@@ -1,5 +1,15 @@
 # App Store listing assets
 
+`metadata.json` is the desired state of the listing text (name, subtitle, description, keywords, promotional text, URLs and
+App Review notes); `screenshots/<locale>/` is the desired screenshot set. They are pushed with `make listing-apply` and
+`make screenshots-apply` (build box only; see `DISTRIBUTION.md`). A field the file doesn't mention is never touched, and one-time
+items (category, age rating, privacy label and policy URL, pricing, copyright, the review contact) stay in the App Store Connect web UI.
+
+## Text
+
+Edit `metadata.json`, then `make listing-check` (offline) validates Apple's limits: 30 characters for the name and subtitle, 100 for
+keywords, 170 for promotional text, 4000 for the description. Keywords carry no trademarked terms and no spaces after commas.
+
 ## Screenshots
 
 `listing/screenshots/en-US/` holds the Mac App Store screenshots: 2880 × 1800 PNGs (16:10, one of the sizes the Mac App Store

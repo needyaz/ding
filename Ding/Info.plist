@@ -33,8 +33,8 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.</string>
+	<string>Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar stays on this Mac unless you let an AI assistant see it.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.</string>
+	<string>Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar stays on this Mac unless you let an AI assistant see it.</string>
 </dict>
 </plist>

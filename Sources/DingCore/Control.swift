@@ -71,7 +71,7 @@ public enum ControlFailure: Error, Equatable, Sendable {
     case noCalendarAccess
     case meetingNotFound(String)
     case nothingToOpen
-    case cannotOpen(String)
+    case cannotOpen
     case invalidArgument(String)
 
     /// A short, stable code for clients that want to branch on it.
@@ -99,8 +99,8 @@ public enum ControlFailure: Error, Equatable, Sendable {
             "There's no upcoming meeting with id \"\(id)\". Use list_meetings or get_next_meeting to get a current id."
         case .nothingToOpen:
             "There's no current or upcoming meeting with a link to open."
-        case .cannotOpen(let title):
-            "The meeting \"\(title)\" has no link Ding recognizes, so it can't be opened."
+        case .cannotOpen:
+            "That meeting has no Zoom, Google Meet, Microsoft Teams or Webex link, so Ding won't open it for an assistant."
         case .invalidArgument(let detail):
             detail
         }
@@ -126,9 +126,15 @@ public enum ControlAPI {
             minutesUntilStart: started ? nil : Int((event.start.timeIntervalSince(now) / 60).rounded(.up)),
             calendar: event.calendarTitle,
             service: event.link?.service.displayName,
-            canOpen: event.hasLink,
+            canOpen: canOpen(event),
             isTentative: event.isMaybe
         )
+    }
+
+    /// An assistant may open only meetings on a known service. Any other link came from an invitation someone else wrote,
+    /// and a prompt-injected assistant must not be able to send the user's browser to it.
+    public static func canOpen(_ event: DingEvent) -> Bool {
+        event.link.map { $0.service != .other } ?? false
     }
 
     /// The same meeting the menu bar shows as "next".
@@ -159,10 +165,10 @@ public enum ControlAPI {
     public static func openTarget(_ events: [DingEvent], now: Date, id: String?) throws -> DingEvent {
         if let id {
             guard let event = events.first(where: { $0.id == id && $0.end > now }) else { throw ControlFailure.meetingNotFound(id) }
-            guard event.hasLink else { throw ControlFailure.cannotOpen(event.title) }
+            guard canOpen(event) else { throw ControlFailure.cannotOpen }
             return event
         }
-        guard let event = JoinSelection.candidate(from: events, now: now) else { throw ControlFailure.nothingToOpen }
+        guard let event = JoinSelection.candidate(from: events.filter(canOpen), now: now) else { throw ControlFailure.nothingToOpen }
         return event
     }
 }

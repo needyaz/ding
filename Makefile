@@ -93,8 +93,21 @@ clean: stop
 # ---------------------------------------------------------------------------
 
 .PHONY: test
-## [Tests] Run everything: core unit tests, then the app tests
-test: test-core test-app
+## [Tests] Run everything: core unit tests, the app tests, then the store-listing tool tests
+test: test-core test-app test-listing
+
+.PHONY: test-listing
+## [Tests] Store-listing tools (Deno): diff/plan logic, Apple's limits, and a check of listing/ (offline, no credentials)
+test-listing: listing-check
+	@command -v deno >/dev/null 2>&1 || { echo "deno not installed — run: brew install deno"; exit 1; }
+	deno test --allow-read scripts/
+
+.PHONY: listing-check
+## [Build] Validate listing/metadata.json and listing/screenshots against Apple's limits (offline)
+listing-check:
+	@command -v deno >/dev/null 2>&1 || { echo "deno not installed — run: brew install deno"; exit 1; }
+	@deno run --allow-read scripts/listing_metadata.ts check
+	@deno run --allow-read scripts/listing_screenshots.ts check
 
 .PHONY: test-core
 ## [Tests] DingCore unit tests (link detection, opener routing, grouping, scheduling)

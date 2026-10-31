@@ -152,6 +152,15 @@ final class ControlServiceTests: XCTestCase {
         XCTAssertFalse(json.contains("Work"), "nor the calendar")
     }
 
+    func testRefusingToOpenNeverNamesTheMeeting() throws {
+        permissions = ControlPermissions(canReadSchedule: false, canOpenMeetings: true)
+        events = [meeting("plain", in: 600, link: false)]
+        let response = request("open_meeting", ["id": .string("plain")])
+        XCTAssertEqual(errorCode(response), "cannot_open")
+        let json = String(decoding: try JSONEncoder().encode(response), as: UTF8.self)
+        XCTAssertFalse(json.contains("Meeting plain"), "the title must not leak through a refusal")
+    }
+
     func testJoiningWithScheduleAccessAlsoReportsTheMeeting() {
         permissions = ControlPermissions(canReadSchedule: true, canOpenMeetings: true)
         events = [meeting("a", in: 600)]

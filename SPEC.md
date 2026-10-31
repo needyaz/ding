@@ -122,7 +122,9 @@ Two separate things, each with its own timing. (The code calls the second an "al
 - What a client can see per meeting: id, title, start and end (local time with its UTC offset), all-day, in progress, minutes until start, calendar name,
   the service name, whether it can be opened, tentative. Never notes, attendees, locations or meeting links: a link can carry a passcode. Inapplicable
   fields are explicit nulls so the shape never changes. The user's calendar selection and dropdown filters apply.
-- `open_meeting` opens the meeting inside Ding, using the user's per-service open settings, and returns no link. The two switches are independent:
+- `open_meeting` opens the meeting inside Ding, using the user's per-service open settings, and returns no link. It only opens meetings on Zoom, Google Meet,
+  Microsoft Teams or Webex (`can_open` is false for an "Other link" and with no id those are skipped): an invitation's arbitrary URL can't be opened by an
+  assistant that a malicious invitation has talked into it. A refusal never includes the meeting's title. The two switches are independent:
   opening works without schedule access, and then the reply is only `{"opened": true}`. The meeting's details are included only if schedule access is also on.
 - Meeting titles are written by whoever sent the invitation, so the server's instructions and tool descriptions tell the model to treat them as untrusted.
 - Argument mistakes and refusals come back as tool errors written for the model ("The user hasn't allowed AI assistants to see their schedule. They can turn it
@@ -130,7 +132,7 @@ Two separate things, each with its own timing. (The code calls the second an "al
 - Ding must be running. If it isn't, the handshake and tool list still work and a tool call says "Ding isn't running".
 - Protocol: MCP over newline-delimited JSON-RPC 2.0; versions 2025-06-18, 2025-03-26 and 2024-11-05; tools only. Batches, notifications and pings are handled.
 - Transport: a Unix socket (owner-only) in the app group container, so the sandboxed helper and sandboxed app need no network entitlement. Ding checks the
-  code signature of every program that connects and hangs up on any not signed by the same team. The helper can't do the same in reverse (the sandbox
+  code signature of every program that connects and hangs up on any that isn't the helper (identifier `blue.luci.Ding.mcp`) signed by the same team. The helper can't do the same in reverse (the sandbox
   forbids inspecting another process), but it only ever sends a method name and small arguments.
 - One Ding instance at a time (`LSMultipleInstancesProhibited`), so there is one owner of the socket.
 
@@ -138,7 +140,9 @@ Two separate things, each with its own timing. (The code calls the second an "al
 
 - Calendar data never leaves the device, with one user-controlled exception: if the user turns on assistant access, the details listed under AI assistants (MCP)
   go to the MCP client they connected, and from there to wherever that client sends them.
-- No analytics, no network calls, no network entitlement.
+- No analytics, no network calls, no network entitlement (verified on the Release build: sandbox, calendars and app group only).
+- Third-party packages (KeyboardShortcuts, MenuBarExtraAccess) are pinned to exact, reviewed versions in `project.yml`; neither touches the network.
+- The calendar permission prompt says the calendar stays on the Mac unless the user lets an AI assistant see it.
 
 ## Architecture
 
@@ -175,6 +179,9 @@ Anything that touches the system sits behind a small protocol or closure so test
 
 - `project.yml` (XcodeGen) generates `Ding.xcodeproj`, which isn't checked in.
 - A `Makefile` with the same conventions as the author's other projects: `make` lists targets, `make menu` is an fzf picker, `make run` builds and launches, `make test`, `make coverage`, `make mcp-smoke` (handshake and tool list through the bundled helper). The app tests run inside Ding, which allows only one instance, so `make test-app` quits a running Ding first.
+- The App Store listing is declared in `listing/metadata.json` (text, URLs, App Review notes) and `listing/screenshots/`. `make listing-apply` and `make screenshots-apply`
+  (build box only, same targets as Mylo, with `-dump` and `-diff` that only read) push them through the App Store Connect API and read them back. The Deno scripts `scripts/listing_metadata.ts` and
+  `scripts/listing_screenshots.ts` do it; `make test-listing` tests them offline.
 - `make screenshots` renders the App Store screenshots from the real views with fixture data (debug builds only; see `listing/README.md`).
 - `design/make_icon.py` builds the app icon set from the source art in `design/`. The menu bar glyph is drawn in code (`MenuBarGlyph`).
 
@@ -198,7 +205,7 @@ Anything that touches the system sits behind a small protocol or closure so test
 
 - Free on the Mac App Store; notarized DMG and Homebrew cask possible later.
 - TestFlight builds are archived and uploaded from the build box only, with `make testflight`, gated by `make/local.mk` like the author's other apps
-  (see `DISTRIBUTION.md`). The build number is the git commit count; the marketing version is `MARKETING_VERSION` in `project.yml`. The app carries a
+  (see `DISTRIBUTION.md`). The build number is the git commit count; the marketing version is `1.0.<commit count>`, stamped at archive time (as in Mylo); `MARKETING_VERSION` in `project.yml` only labels dev builds. The app carries a
   privacy manifest declaring its UserDefaults use.
 - License: GPLv3. The repo is public, but outside code contributions aren't accepted (see `CONTRIBUTING.md`). The author holds the copyright
   on all of it, which is what allows the App Store build despite the GPL; no CLA is needed. Issues are welcome.

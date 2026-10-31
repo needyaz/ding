@@ -19,7 +19,7 @@ On any other machine that target does not exist (`No rule to make target`): `mak
 4. **Export with `destination: upload`** (`make/ExportOptions-upload.plist`): the export step is the TestFlight upload. Both steps
    authenticate with the API key, so automatic signing creates and refreshes the distribution certificate and profiles (cloud signing).
 
-The marketing version (`0.1.0`) is `MARKETING_VERSION` in `project.yml`.
+The marketing version is `1.0.<build number>`, stamped at archive time like Mylo's, and it is also the App Store version string. (`MARKETING_VERSION` in `project.yml` only labels dev builds.)
 
 ## Every release
 
@@ -28,6 +28,27 @@ The marketing version (`0.1.0`) is `MARKETING_VERSION` in `project.yml`.
 3. A re-run without a new commit re-uploads a build number Apple already has, and Apple answers a duplicate with opaque errors.
    Make a new commit first.
 4. Apple processes the build for a few minutes before it appears in TestFlight.
+
+## The App Store listing
+
+Text and screenshots are declared in `listing/` and pushed with the same API key, on the build box only. The targets match Mylo's:
+
+```sh
+make listing-dump        make screenshots-dump     # print what the store has (read-only)
+make listing-diff        make screenshots-diff     # what differs from listing/ (read-only)
+make listing-apply       make screenshots-apply    # write, then read back and verify
+```
+
+- `scripts/listing_metadata.ts` handles the name, subtitle, description, keywords, promotional text, URLs and App Review notes.
+  `scripts/listing_screenshots.ts` handles the screenshot set (2880 × 1800, in file-name order; any difference replaces the whole set,
+  because Apple orders by upload). Fields `metadata.json` doesn't mention are never touched.
+- `listing-apply` creates the editable version as `VERSION` (default `1.0.<commit count>`, what `make testflight` just stamped, so run it with no new commits in between) if none exists.
+  Description, keywords, review notes and screenshots can only change on an editable version; promotional text can change any time.
+- Order: `make testflight`, then `make listing-apply`, then `make screenshots-apply` (the locale must exist first).
+- `make listing-check` and `make test-listing` run offline on any machine, with no credentials.
+- Category, age rating, privacy label, pricing, the privacy policy URL, copyright and the review contact are set once in the web UI,
+  as for the other apps.
+- This tooling has been tested offline only, so run the read-only `diff` targets first on the build box.
 
 ## One-time setup
 

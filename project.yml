@@ -8,20 +8,21 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     ENABLE_HARDENED_RUNTIME: YES
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: 46XLY7Y9P8
+# Third-party packages are pinned to the exact versions that were reviewed; bump them on purpose.
 packages:
   DingCore:
     path: .
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
-    from: 3.0.0
+    exactVersion: 3.1.0
   MenuBarExtraAccess:
     url: https://github.com/orchetect/MenuBarExtraAccess
-    from: 1.2.0
+    exactVersion: 1.3.1
 targets:
   Ding:
     type: application
@@ -52,8 +53,8 @@ targets:
         LSMultipleInstancesProhibited: true
         LSMinimumSystemVersion: "14.0"
         LSApplicationCategoryType: public.app-category.productivity
-        NSCalendarsFullAccessUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.
-        NSCalendarsUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.
+        NSCalendarsFullAccessUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar stays on this Mac unless you let an AI assistant see it.
+        NSCalendarsUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar stays on this Mac unless you let an AI assistant see it.
         ITSAppUsesNonExemptEncryption: false
         DingAppGroup: $(TeamIdentifierPrefix)blue.luci.Ding
     entitlements:

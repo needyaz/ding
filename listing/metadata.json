@@ -1,0 +1,16 @@
+{
+  "localizations": {
+    "en-US": {
+      "name": "Ding: Meeting Countdown",
+      "subtitle": "Your next meeting, one click",
+      "supportUrl": "https://luci.blue/ding",
+      "marketingUrl": "https://luci.blue/ding",
+      "promotionalText": "Your next meeting, counted down in the menu bar and one click away. Private by design: no account, no network, no ads.",
+      "keywords": "meeting,calendar,countdown,menubar,join,reminder,alert,video call,next event,agenda,schedule",
+      "description": "Ding puts your next meeting in the menu bar, counts down to it, and joins it in one click.\n\nYour next meeting is always in view: its title and a live countdown sit in the menu bar. Click to see what's coming up today and over the next few days, and click any meeting to join.\n\nJOIN IN ONE CLICK\nDing finds the video link in each invitation (Zoom, Google Meet, Microsoft Teams, Webex, or a single other web link) and opens it in the app or browser you choose for each service. Set a keyboard shortcut to join your next meeting without touching the mouse.\n\nALERTS YOU WON'T MISS\nGet a notification before a meeting, with a Join button. Want something harder to miss? Turn on a pulse around the edge of your screen, or a full-screen alert with the countdown and Join, Snooze and Dismiss buttons.\n\nYOUR CALENDARS, YOUR RULES\nDing works with every calendar in the Calendar app: iCloud, Google, Exchange and more. Choose which calendars to show, hide meetings without a link or ones you haven't accepted, and pick 12- or 24-hour time. Declined and canceled events never appear.\n\nPRIVATE BY DESIGN\nDing reads your calendar on your Mac and nothing else. There is no account, no analytics, no ads and no network access at all.\n\nAI ACCESS (OPTIONAL)\nIf you use an AI assistant that supports MCP, you can let it ask for your next meeting or open one for you, like \"open my next meeting\". It is off until you turn it on, you choose what it may do, and it never sees notes, attendees, locations or meeting links."
+    }
+  },
+  "review": {
+    "notes": "Ding is a menu bar app with no Dock icon: look for the bell at the top right of the screen.\n\nOn first launch it asks for Calendar access. Please choose Full Access, which Ding needs to read events. To see it work, add an event that starts in a few minutes and has a Zoom or Google Meet link in its location or notes; it then appears in the menu bar with a countdown, and clicking it opens the link.\n\nPreferences has an optional AI Access tab. It lets an MCP client such as an AI assistant connect through a small helper bundled in the app (Ding.app/Contents/Helpers/ding-mcp). Both switches are off by default and nothing else needs to be tested.\n\nNo account or sign-in is needed, and Ding makes no network connections."
+  }
+}

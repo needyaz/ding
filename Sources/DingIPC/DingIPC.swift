@@ -11,9 +11,13 @@ public enum DingIPC {
         return team.flatMap { $0.isEmpty ? nil : $0 }
     }
 
-    /// Only code signed by the same team may talk to Ding. Works for development, Developer ID and App Store signing.
+    /// The code signing identifier of the bundled helper, the only program that has a reason to connect.
+    public static let helperIdentifier = "blue.luci.Ding.mcp"
+
+    /// Only the helper, signed by the same team, may talk to Ding: another app of the same developer can't.
+    /// Works for development, Developer ID and App Store signing.
     public static func codeSigningRequirement(teamID: String) -> String {
-        #"anchor apple generic and certificate leaf[subject.OU] = "\#(teamID)""#
+        #"anchor apple generic and certificate leaf[subject.OU] = "\#(teamID)" and identifier "\#(helperIdentifier)""#
     }
 
     /// The socket lives in the app group container, which only the app and its helper can reach.

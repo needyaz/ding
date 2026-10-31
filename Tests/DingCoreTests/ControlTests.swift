@@ -170,7 +170,16 @@ final class ControlAPITests: DingCoreTestCase {
         let events = [meeting("done", date(2026, 10, 31, 9)), meeting("plain", date(2026, 10, 31, 13), link: nil)]
         XCTAssertThrowsError(try ControlAPI.openTarget(events, now: now, id: "ghost")) { XCTAssertEqual($0 as? ControlFailure, .meetingNotFound("ghost")) }
         XCTAssertThrowsError(try ControlAPI.openTarget(events, now: now, id: "done")) { XCTAssertEqual($0 as? ControlFailure, .meetingNotFound("done")) }
-        XCTAssertThrowsError(try ControlAPI.openTarget(events, now: now, id: "plain")) { XCTAssertEqual($0 as? ControlFailure, .cannotOpen("plain")) }
+        XCTAssertThrowsError(try ControlAPI.openTarget(events, now: now, id: "plain")) { XCTAssertEqual($0 as? ControlFailure, .cannotOpen) }
+    }
+
+    func testAssistantsOnlyOpenKnownServices() throws {
+        let now = date(2026, 10, 31, 9)
+        let events = [meeting("web", date(2026, 10, 31, 9, 30), link: .other), meeting("zoom", date(2026, 10, 31, 10))]
+        XCTAssertFalse(ControlAPI.summary(of: events[0], now: now, timeZone: la).canOpen, "an arbitrary link is not offered")
+        XCTAssertTrue(ControlAPI.summary(of: events[1], now: now, timeZone: la).canOpen)
+        XCTAssertThrowsError(try ControlAPI.openTarget(events, now: now, id: "web")) { XCTAssertEqual($0 as? ControlFailure, .cannotOpen) }
+        XCTAssertEqual(try ControlAPI.openTarget(events, now: now, id: nil).id, "zoom", "with no id it skips the arbitrary link")
     }
 
     func testJoinWithNothingToJoin() {
@@ -180,7 +189,7 @@ final class ControlAPITests: DingCoreTestCase {
     // MARK: Failures
 
     func testEveryFailureHasACodeAndAReadableMessage() {
-        let failures: [ControlFailure] = [.scheduleAccessOff, .openingOff, .noCalendarAccess, .meetingNotFound("x"), .nothingToOpen, .cannotOpen("Standup"), .invalidArgument("bad")]
+        let failures: [ControlFailure] = [.scheduleAccessOff, .openingOff, .noCalendarAccess, .meetingNotFound("x"), .nothingToOpen, .cannotOpen, .invalidArgument("bad")]
         XCTAssertEqual(Set(failures.map(\.code)).count, failures.count, "codes must be distinct")
         for failure in failures {
             XCTAssertFalse(failure.message.isEmpty)
