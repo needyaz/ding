@@ -50,7 +50,8 @@ pull:
 # Same targets as Mylo. dump/diff only read; apply writes and then reads back.
 #
 # Description, keywords and review notes need an EDITABLE appStoreVersion; if
-# none exists, listing-apply creates one as VERSION, which defaults to the
+# none exists, listing-apply creates one as VERSION (and renames an editable one
+# with another name, e.g. made by hand), which defaults to the
 # 1.0.<git commit count>, the exact string `make testflight` stamps into the
 # binary, so run it right after testflight with no new commits in between (same
 # caveat as Mylo). Screenshots need that version and the locale to exist, so they
@@ -74,8 +75,8 @@ listing-dump: _preflight-listing
 	$(LISTING_DENO) scripts/listing_metadata.ts dump
 ## [Release|box:prod-build] Diff live store listing vs listing/metadata.json (read-only)
 listing-diff: _preflight-listing
-	$(LISTING_DENO) scripts/listing_metadata.ts diff
-## [Release|box:prod-build] Apply differing listing metadata, then read back and verify (creates editable version VERSION, default 1.0.<commit count>)
+	$(LISTING_DENO) scripts/listing_metadata.ts diff --create-version $(VERSION)
+## [Release|box:prod-build] Apply differing listing metadata, then read back and verify (makes the editable version exactly VERSION, default 1.0.<commit count>: renames or creates it)
 listing-apply: _preflight-listing
 	$(LISTING_DENO) scripts/listing_metadata.ts apply --create-version $(VERSION)
 

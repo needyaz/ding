@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { computeDiff, type Desired, needsEditableVersion, reviewContactFromEnv, validate } from "./listing_metadata.ts";
+import { computeDiff, type Desired, needsEditableVersion, reviewContactFromEnv, validate, versionPlan } from "./listing_metadata.ts";
 
 const desired = (loc: Record<string, string>, review?: Record<string, string>): Desired => ({ localizations: { "en-US": loc }, review });
 
@@ -71,4 +71,12 @@ Deno.test("version attributes are validated and diffed like the rest", () => {
 Deno.test("the review contact comes from the environment and only when set", () => {
   assertEquals(reviewContactFromEnv({}), {});
   assertEquals(reviewContactFromEnv({ REVIEW_CONTACT_FIRST_NAME: "A", REVIEW_CONTACT_EMAIL: "a@example.com", PATH: "/bin" }), { contactFirstName: "A", contactEmail: "a@example.com" });
+});
+
+Deno.test("the editable version is made to carry exactly the stamped version", () => {
+  assertEquals(versionPlan({ versionString: "1.0.10", editable: true }, "1.0.10"), "none");
+  assertEquals(versionPlan({ versionString: "1.0", editable: true }, "1.0.10"), "rename");
+  assertEquals(versionPlan({ versionString: "1.0.9", editable: false }, "1.0.10"), "create");
+  assertEquals(versionPlan({ versionString: "1.0.10", editable: false }, "1.0.10"), "none");
+  assertEquals(versionPlan({ versionString: "1.0", editable: true }, undefined), "none");
 });

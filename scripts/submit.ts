@@ -36,7 +36,11 @@ if (import.meta.main) {
   const jwt = await ascJwt();
   const appId = await findApp(jwt);
   const target = (await macVersions(jwt, appId)).find((v) => v.versionString === version);
-  if (!target) { fail(`No macOS version ${version} on the store. Run make listing-apply first.`); Deno.exit(1); }
+  if (!target) {
+    const found = (await macVersions(jwt, appId)).map((v) => `${v.versionString} (${v.state})`).join(", ") || "none";
+    fail(`No macOS version named exactly ${version} on the store. Found: ${found}. listing-apply makes the editable version carry that name.`);
+    Deno.exit(1);
+  }
 
   const action = actionFor(target.state);
   if (action === "already-submitted") { pass(`${version} is already ${target.state}.`); Deno.exit(0); }

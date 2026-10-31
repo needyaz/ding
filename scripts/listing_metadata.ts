@@ -5,9 +5,10 @@
  *   deno run scripts/listing_metadata.ts check                     offline: validate the file against Apple's limits
  *   deno run --allow-net --allow-env --allow-read scripts/listing_metadata.ts dump
  *   deno run --allow-net --allow-env --allow-read scripts/listing_metadata.ts diff
- *   deno run --allow-net --allow-env --allow-read scripts/listing_metadata.ts apply [--create-version 1.0]
+ *   deno run --allow-net --allow-env --allow-read scripts/listing_metadata.ts apply [--create-version 1.0.77]
  *
- * Only the fields present in the file are managed; a field that isn't mentioned is never touched. Description, keywords,
+ * Only the fields present in the file are managed; a field that isn't mentioned is never touched. With --create-version the
+ * editable version is made to carry exactly that name (renamed, or created if none is editable). Description, keywords,
  * URLs and review notes belong to an app store *version* and can only change while one is editable (`apply` refuses
  * otherwise, or creates one with --create-version). Promotional text may change on any version. Name, subtitle and the
  * privacy policy URL belong to the app's info record and follow the same editable rule.
@@ -127,6 +128,16 @@ export function reviewContactFromEnv(env: Record<string, string>): Review {
   return Object.fromEntries(fields.filter(([, name]) => env[name]).map(([field, name]) => [field, env[name]]));
 }
 
+/**
+ * What to do so the store has an editable version named exactly `wanted`, the string the binary was stamped with.
+ * An editable version with another name (one made by hand in the web UI, say) is renamed rather than left to
+ * mismatch; with none editable, a new one is created.
+ */
+export function versionPlan(current: { versionString: string; editable: boolean }, wanted: string | undefined): "none" | "rename" | "create" {
+  if (!wanted || current.versionString === wanted) return "none";
+  return current.editable ? "rename" : "create";
+}
+
 /** Whether a change can be written without an editable version (promotional text on an existing locale can). */
 export function needsEditableVersion(change: Change, localeExistsOnStore: boolean): boolean {
   if (change.section === "info") return true;
@@ -214,6 +225,19 @@ function attributesFor(section: Section, loc: Localization): Record<string, stri
 
 async function apply(jwt: string, live: Live, desired: Desired, versionToCreate: string | undefined): Promise<void> {
   let state = live;
+  const plan = versionPlan({ versionString: state.versionString, editable: state.versionEditable }, versionToCreate);
+  if (plan === "rename") {
+    step(`Renaming version ${state.versionString} to ${versionToCreate}…`);
+    await asc(jwt, `/appStoreVersions/${state.versionId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ data: { type: "appStoreVersions", id: state.versionId, attributes: { versionString: versionToCreate } } }),
+    });
+    state = (await read(jwt))!;
+  } else if (plan === "create") {
+    step(`Creating version ${versionToCreate}…`);
+    await createVersion(jwt, state.appId, versionToCreate!);
+    state = (await read(jwt))!;
+  }
   let changes = computeDiff(state.desired, desired);
   const blocked = (s: Live) => changes.filter((c) => !s.versionEditable && needsEditableVersion(c, c.locale ? c.locale in s.versionLocIds : false));
 
@@ -363,13 +387,16 @@ if (import.meta.main) {
     Deno.exit(0);
   }
 
+  const flag = rest.indexOf("--create-version");
+  const wantedVersion = flag >= 0 ? rest[flag + 1] : undefined;
+  const versionStep = versionPlan({ versionString: live.versionString, editable: live.versionEditable }, wantedVersion);
   const changes = computeDiff(live.desired, desired);
-  if (changes.length === 0) { pass("The store already matches listing/metadata.json."); Deno.exit(0); }
+  if (changes.length === 0 && versionStep === "none") { pass("The store already matches listing/metadata.json."); Deno.exit(0); }
+  if (versionStep !== "none") console.log(`  version: ${live.versionString} → ${wantedVersion} (${versionStep})`);
   printChanges(changes);
   if (command === "diff") Deno.exit(1);
 
-  const flag = rest.indexOf("--create-version");
-  await apply(jwt, live, desired, flag >= 0 ? rest[flag + 1] : undefined);
+  await apply(jwt, live, desired, wantedVersion);
 
   step("Read-back verification…");
   const after = computeDiff((await read(jwt))!.desired, desired);

@@ -36,8 +36,8 @@ On the build box, `make release` does everything, in this order (as Mylo's `rele
 1. **`testflight`:** preflight, `pull`, then the duplicate-build check (`scripts/asc_build_check.ts`: a build already on App Store
    Connect is reused, a burned number stops the run, anything unknown builds as usual), archive and upload.
 2. **`store-setup-apply`:** the app's one-time settings from `listing/app.json`: content rights, category, age rating, price, availability.
-3. **`listing-apply`:** the listing text, copyright, release type and App Review information from `listing/metadata.json`. It creates
-   the editable version as `VERSION` (default `1.0.<commit count>`, what step 1 just stamped, so keep new commits out in between).
+3. **`listing-apply`:** the listing text, copyright, release type and App Review information from `listing/metadata.json`. It makes
+   the editable version carry exactly `VERSION` (renaming one made by hand, or creating one) (default `1.0.<commit count>`, what step 1 just stamped, so keep new commits out in between).
 4. **`screenshots-apply`:** the screenshots from `listing/screenshots/`. The locale has to exist first, which step 3 ensures.
 
 5. **`submit`:** attaches the build to the version and sends it to App Review. It is also a target on its own (`DRY=1` previews).
