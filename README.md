@@ -28,6 +28,8 @@ make test       # core tests, then app tests
 make coverage   # run everything and print line coverage
 ```
 
+There is no CI; run `make test` before you push.
+
 ## Project layout
 
 | Path | What's there |

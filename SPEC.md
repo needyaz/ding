@@ -127,7 +127,8 @@ Anything that touches the system sits behind a small protocol or closure so test
 - **App (`make test-app`):** tests hosted inside the app covering preferences, EventKit mapping, the model's lifecycle (wake, clock, preference changes), real timers, notification content, alert windows, and every view and settings tab rendering.
 - Nothing in tests touches the real system. The notification center, browsers and workspace, EventKit, login items and windows all sit behind protocols or closures, and tests use fakes. (An early version of the tests scheduled real notifications; this is the rule that came out of it.)
 - `make coverage` prints line coverage: about 99.6% for core and 93% for the app. The uncovered remainder is code whose only job is to call the real OS (opening apps, the live notification center, registering a login item) and a few view button closures.
-- **Still manual:** a pass of the test matrix: iCloud, Google and Exchange accounts; sleep/wake; time zone and DST changes; multiple displays for alerts; notifications and hotkeys on a real Mac.
+- **Still manual:** a pass of the test matrix on a real Mac (iCloud, Google and Exchange accounts; sleep/wake; time zone and DST changes; multiple displays for alerts; notifications and hotkeys).
+- No CI: tests run locally with `make test`.
 
 ## Distribution & License
 
@@ -141,7 +142,7 @@ Anything that touches the system sits behind a small protocol or closure so test
 ## Milestones
 
 Status: 1–5 are implemented and the icon from 6 is done. Remaining: the manual test pass, signing and notarization,
-App Store submission, and creating the public GitHub repo (with CI).
+App Store submission, and flipping the GitHub repo public.
 
 1. Skeleton: menu bar item, EventKit permission, next-event countdown.
 2. Dropdown with grouping, color dots, calendar picker.
@@ -161,6 +162,7 @@ App Store submission, and creating the public GitHub repo (with CI).
 - The name is **Ding**. Trademark and App Store availability checks are not being pursued.
 - The icon stays a plain asset-catalog icon; Icon Composer is not needed.
 - The spec is updated in the same change as any behavior change.
+- No CI. Tests run locally (`make test`).
 - The GitHub repo (`needyaz/ding`) is **private** for now and will be flipped public later. Until then the Send Feedback link and the
   issues link in `CONTRIBUTING.md` aren't reachable by anyone else.
 
