@@ -152,7 +152,7 @@ struct FullScreenAlertView: View {
                         .multilineTextAlignment(.center)
                         .lineLimit(3)
                     TimelineView(.periodic(from: .now, by: 1)) { context in
-                        Text(EventDisplay.startedText(now: context.date, start: event.start))
+                        Text(EventDisplay.alertStatus(now: context.date, start: event.start))
                             .font(.system(size: 24, weight: .regular).monospacedDigit())
                             .foregroundStyle(.secondary)
                     }

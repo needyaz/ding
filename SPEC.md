@@ -38,6 +38,8 @@ A free, open-source macOS menu bar app that shows your next meeting and lets you
 - Long titles truncate with an ellipsis (24 characters); newlines collapse to spaces.
 
 ### Dropdown
+- A **Next meeting** card at the top, mirroring the menu bar: "Next · in 12m" (or "Happening now"), the title, the time, and a **Join** button when
+  the meeting has a link. Joining the meeting in the menu bar shouldn't need a hotkey or a hunt through the list.
 - Upcoming events grouped by day (Today, Tomorrow, then weekday and date). Days with no events are skipped.
 - Range setting: 1, 3, 7 or 14 days.
 - All-day events show first in each day, italic with a tinted row. A multi-day all-day event appears on each day it covers.
@@ -45,13 +47,16 @@ A free, open-source macOS menu bar app that shows your next meeting and lets you
 - Calendar color dot on each event; "maybe" events are dimmed and marked "· Maybe". Declined and canceled events are never shown.
 - Toggles: show events without a meeting link; show events marked "maybe".
 - Clicking an event with a link joins it. Rows are accessible (one element, button role, hint) and day headers are marked as headers.
+- A short list is a plain stack; a long one scrolls inside a fixed 460pt. A scroll view reports no height of its own in the self-sizing menu bar
+  window, so without an explicit height the list collapses to nothing (this shipped once: a 340x36 popover with only the footer). The size is
+  right from the first layout, with no measure-and-resize step.
 - Calendar access states: a prompt to allow access, a button to open Privacy settings when denied, and an empty state when there are no meetings.
 - Footer: Preferences, Send Feedback (opens the GitHub issues page in the default browser), Quit.
 
 ### Calendar selection
 - Preferences list calendars grouped by account, each with a checkbox.
 - The *disabled* calendars are what's stored, so calendars that appear later default to on and ones that disappear are harmless.
-- Calendar selection applies everywhere: dropdown, menu bar, notifications and alerts.
+- Calendar selection applies everywhere: dropdown, menu bar, notifications and screen reminders.
 
 ### Link detection
 - Services: Zoom, Google Meet, Microsoft Teams, Webex.
@@ -66,15 +71,28 @@ A free, open-source macOS menu bar app that shows your next meeting and lets you
 - Desktop app routing: Zoom uses a `zoommtg://` deep link (personal-room and webinar links open in the app instead), Teams uses `msteams://`, Webex opens the web URL in the Webex app. If the app isn't installed, or a chosen browser is missing, the link falls back to the default browser.
 - "Other links" use the default browser unless overridden.
 
-### Notifications and alerts
-- A standard macOS notification N minutes before an event (Off, 1, 2, 5, 10 or 15; default 5), with an optional sound and an optional Join button. Clicking the banner or Join opens the link. Body reads "Starts in 5 minutes · Zoom".
-- Alert mode setting, three options:
-  1. **Off** — notification only.
-  2. **Edge flash** — brief screen-edge pulse at start time plus the notification.
-  3. **Full screen** — takeover at start time with the title, a live "Starting now / Started 2 min ago" line, and Join, Snooze (1 minute) and Dismiss. Esc dismisses. The primary display shows the card; other displays are dimmed.
-- Alerts only fire for timed events with a meeting link by default (setting to include events without one). All-day events never alert.
-- Hidden calendars and events hidden by the dropdown toggles don't alert either.
-- At most 50 notifications are scheduled at once (macOS allows 64). Alerts that would fire more than 2 minutes late, such as after a Mac wakes from sleep, are skipped.
+### Notifications and screen reminders
+
+Two separate things, each with its own timing. (The code calls the second an "alert"; the UI says "screen reminder", because macOS already uses
+"Alerts" for a notification style.) Both live on Preferences' **Notifications** tab.
+
+- **Notification:** a standard macOS notification N minutes before an event (Off, 1, 2, 5, 10 or 15; default 5), with an optional sound and an
+  optional Join button. Clicking the banner or Join opens the link. Body reads "Starts in 5 minutes · Zoom".
+- **Screen reminder:** a bolder reminder on top of the notification, shown at its own time: at the start time, or 1, 2 or 5 minutes before
+  (default 1). Style setting, three options:
+  1. **None** — just the notification (the default).
+  2. **Flash the screen edges** — a brief screen-edge pulse on every display.
+  3. **Full screen** — a takeover with the title, a live line, and Join, Snooze (1 minute) and Dismiss. Esc dismisses. The primary display
+     shows the card; other displays are dimmed. The live line counts down before the start ("Starts in 0:59"), then reads "Starting now" and
+     "Started 2 min ago".
+- The two times are independent and may coincide. The default is a 5-minute notification followed by a full-screen reminder 1 minute before.
+- A **Preview** button shows the chosen reminder for a sample meeting that starts when a real one would.
+- Both only fire for timed events with a meeting link by default (setting to include events without one). All-day events never fire.
+- Hidden calendars and events hidden by the dropdown toggles don't fire either.
+- Something whose time has already passed is not shown late, even if the meeting hasn't started. The schedule is rebuilt on every reload, so
+  replanning it would show the same reminder again each time. For the same reason, a meeting created inside the lead window gets none.
+- At most 50 notifications are scheduled at once (macOS allows 64). Reminders that would fire more than 2 minutes late, such as after a Mac wakes
+  from sleep, are skipped.
 
 ### Hotkeys
 - Open the Ding menu.
@@ -88,7 +106,10 @@ A free, open-source macOS menu bar app that shows your next meeting and lets you
 
 ### Refresh behavior
 - Events are fetched for the next 14 days regardless of the dropdown range, so the menu bar can show a meeting beyond it.
-- Reloaded on calendar changes, wake from sleep, clock changes, time zone changes, midnight, and every 15 minutes as a safety net.
+- Reloaded on calendar changes, wake from sleep, clock changes, time zone changes, midnight, when Ding becomes active, when Preferences opens,
+  and every 15 minutes as a safety net.
+- On every calendar change the EventKit store is reset before reloading. EventKit caches its reads, so without this a newly added account or
+  calendar doesn't appear in Preferences.
 - The countdown refreshes exactly when its label changes, and at least once a minute.
 
 ## Privacy
@@ -105,7 +126,7 @@ Anything that touches the system sits behind a small protocol or closure so test
 - `MeetingLinkDetector` + `LinkPatterns`: event text to `MeetingLink?`. One pattern table; heavily unit-tested.
 - `MeetingOpener` + `OpenTarget`: resolves a link and the user's per-service choice to an app or browser (via `WorkspaceOpening`).
 - `DayGrouping`, `Countdown`, `NextEvent`, `MenuBarText`, `EventDisplay`: what the menu bar and dropdown show.
-- `AlertPlanner`, `AlertQueue`, `NotificationPlanner`, `TickPlanner`, `JoinSelection`: what fires and when.
+- `AlertPlanner`, `AlertQueue`, `NotificationPlanner`, `TickPlanner`, `JoinSelection`: what fires and when (notification and alert timing are separate settings).
 
 **`Ding` (app)**
 - `AppModel`: observable state and the glue between the calendar, timers and alerts.
@@ -125,6 +146,8 @@ Anything that touches the system sits behind a small protocol or closure so test
 
 - **Core (`swift test`):** link detection against a fixture corpus of real-world invite shapes plus edge cases (wrappers, lookalike hosts, unicode, punctuation), opener routing for every service and mode, countdown and scheduling math, day grouping including DST, alert and notification planning.
 - **App (`make test-app`):** tests hosted inside the app covering preferences, EventKit mapping, the model's lifecycle (wake, clock, preference changes), real timers, notification content, alert windows, and every view and settings tab rendering.
+- The dropdown's sizing is tested as logic (a short list is a plain stack, a long one is capped and scrolls, the next-meeting card adds height).
+  The original collapse only reproduced in the real menu bar window, so layout changes there are checked by hand against the running app.
 - Nothing in tests touches the real system. The notification center, browsers and workspace, EventKit, login items and windows all sit behind protocols or closures, and tests use fakes. (An early version of the tests scheduled real notifications; this is the rule that came out of it.)
 - `make coverage` prints line coverage: about 99.6% for core and 93% for the app. The uncovered remainder is code whose only job is to call the real OS (opening apps, the live notification center, registering a login item) and a few view button closures.
 - **Still manual:** a pass of the test matrix on a real Mac (iCloud, Google and Exchange accounts; sleep/wake; time zone and DST changes; multiple displays for alerts; notifications and hotkeys).
@@ -148,7 +171,7 @@ App Store submission, and flipping the GitHub repo public.
 2. Dropdown with grouping, color dots, calendar picker.
 3. Link detection + join + per-service open settings.
 4. Notifications, hotkeys, launch at login.
-5. Alerts (edge flash, full screen).
+5. Screen reminders (edge flash, full screen).
 6. Polish, icon, App Store submission.
 
 ## Known limitations

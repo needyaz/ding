@@ -21,6 +21,7 @@ enum Pref {
     static let notifySound = "notifySound"
     static let notifyJoinAction = "notifyJoinAction"
     static let alertMode = "alertMode"
+    static let alertLeadMinutes = "alertLeadMinutes"
     static let alertIncludeAll = "alertIncludeAll"
 
     /// How links for `service` open: "native", "default", or a browser's bundle ID.
@@ -40,12 +41,16 @@ enum Pref {
         static let notifySound = true
         static let notifyJoinAction = true
         static let alertMode = AlertMode.off
+        /// Early enough to join without being late, and clear of the 5-minute notification.
+        static let alertLeadMinutes = 1
         static let alertIncludeAll = false
     }
 
     /// Choices offered in Preferences.
     static let rangeDayOptions = [1, 3, 7, 14]
     static let leadMinuteOptions = [1, 2, 5, 10, 15]
+    /// 0 means at the start time.
+    static let alertLeadOptions = [0, 1, 2, 5]
 
     static func registerDefaults() {
         var values: [String: Any] = [
@@ -60,6 +65,7 @@ enum Pref {
             notifySound: Default.notifySound,
             notifyJoinAction: Default.notifyJoinAction,
             alertMode: Default.alertMode.rawValue,
+            alertLeadMinutes: Default.alertLeadMinutes,
             alertIncludeAll: Default.alertIncludeAll,
         ]
         for service in MeetingService.allCases {
@@ -99,8 +105,9 @@ enum Pref {
 
     static var alertSettings: AlertSettings {
         AlertSettings(
-            leadMinutes: defaults.integer(forKey: notifyLeadMinutes),
+            notificationLeadMinutes: defaults.integer(forKey: notifyLeadMinutes),
             mode: AlertMode(rawValue: defaults.string(forKey: alertMode) ?? "") ?? .off,
+            alertLeadMinutes: defaults.integer(forKey: alertLeadMinutes),
             includeEventsWithoutLink: defaults.bool(forKey: alertIncludeAll)
         )
     }

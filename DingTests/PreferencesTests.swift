@@ -14,6 +14,7 @@ final class PreferencesTests: IsolatedDefaultsTestCase {
         XCTAssertTrue(suite.bool(forKey: Pref.notifySound))
         XCTAssertTrue(suite.bool(forKey: Pref.notifyJoinAction))
         XCTAssertEqual(suite.string(forKey: Pref.alertMode), "off")
+        XCTAssertEqual(suite.integer(forKey: Pref.alertLeadMinutes), 1)
         XCTAssertFalse(suite.bool(forKey: Pref.alertIncludeAll))
     }
 
@@ -68,8 +69,24 @@ final class PreferencesTests: IsolatedDefaultsTestCase {
     func testAlertSettingsReadPreferences() {
         suite.set(10, forKey: Pref.notifyLeadMinutes)
         suite.set("fullScreen", forKey: Pref.alertMode)
+        suite.set(2, forKey: Pref.alertLeadMinutes)
         suite.set(true, forKey: Pref.alertIncludeAll)
-        XCTAssertEqual(Pref.alertSettings, AlertSettings(leadMinutes: 10, mode: .fullScreen, includeEventsWithoutLink: true))
+        XCTAssertEqual(
+            Pref.alertSettings,
+            AlertSettings(notificationLeadMinutes: 10, mode: .fullScreen, alertLeadMinutes: 2, includeEventsWithoutLink: true)
+        )
+    }
+
+    func testAlertTimingDefaultsToOneMinuteBeforeAndIsIndependentOfTheNotification() {
+        XCTAssertEqual(Pref.alertSettings.alertLeadMinutes, 1)
+        XCTAssertEqual(Pref.alertSettings.notificationLeadMinutes, 5)
+        suite.set(15, forKey: Pref.notifyLeadMinutes)
+        XCTAssertEqual(Pref.alertSettings.alertLeadMinutes, 1)
+    }
+
+    func testAlertLeadOptionsStartAtTheStartTime() {
+        XCTAssertEqual(Pref.alertLeadOptions, [0, 1, 2, 5])
+        XCTAssertTrue(Pref.alertLeadOptions.contains(Pref.Default.alertLeadMinutes))
     }
 
     func testUnknownAlertModeFallsBackToOff() {

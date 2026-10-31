@@ -29,7 +29,7 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         var alerted: DingEvent?
         scheduler.onAlert = { alerted = $0; fired.fulfill() }
         let e = DingEvent.test("a", startingIn: 1)
-        scheduler.update(events: [e], next: e, settings: AlertSettings(leadMinutes: 0, mode: .fullScreen))
+        scheduler.update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 0, mode: .fullScreen))
         wait(for: [fired], timeout: 4)
         XCTAssertEqual(alerted?.id, "a")
     }
@@ -39,7 +39,7 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         var fired = false
         scheduler.onAlert = { _ in fired = true }
         let e = DingEvent.test("a", startingIn: 1)
-        scheduler.update(events: [e], next: e, settings: AlertSettings(leadMinutes: 0, mode: .off))
+        scheduler.update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 0, mode: .off))
         RunLoop.current.run(until: Date().addingTimeInterval(2.5))
         XCTAssertFalse(fired)
     }
@@ -49,7 +49,7 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         var fired = false
         scheduler.onAlert = { _ in fired = true }
         let e = DingEvent.test("a", startingIn: 1, link: false)
-        scheduler.update(events: [e], next: e, settings: AlertSettings(leadMinutes: 0, mode: .edgeFlash))
+        scheduler.update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 0, mode: .edgeFlash))
         RunLoop.current.run(until: Date().addingTimeInterval(2.5))
         XCTAssertFalse(fired)
     }
@@ -59,8 +59,8 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         var fired = false
         scheduler.onAlert = { _ in fired = true }
         let e = DingEvent.test("a", startingIn: 1.5)
-        scheduler.update(events: [e], next: e, settings: AlertSettings(leadMinutes: 0, mode: .fullScreen))
-        scheduler.update(events: [], next: nil, settings: AlertSettings(leadMinutes: 0, mode: .fullScreen))
+        scheduler.update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 0, mode: .fullScreen))
+        scheduler.update(events: [], next: nil, settings: AlertSettings(notificationLeadMinutes: 0, mode: .fullScreen))
         RunLoop.current.run(until: Date().addingTimeInterval(3))
         XCTAssertFalse(fired)
     }
@@ -73,7 +73,7 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         scheduler.onAlert = { order.append($0.id); both.fulfill() }
         let first = DingEvent.test("first", startingIn: 1)
         let second = DingEvent.test("second", startingIn: 2)
-        scheduler.update(events: [second, first], next: first, settings: AlertSettings(leadMinutes: 0, mode: .fullScreen))
+        scheduler.update(events: [second, first], next: first, settings: AlertSettings(notificationLeadMinutes: 0, mode: .fullScreen))
         wait(for: [both], timeout: 5)
         XCTAssertEqual(order, ["first", "second"])
     }
@@ -84,15 +84,15 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         let notifier = FakeNotifier()
         let scheduler = Scheduler(notifier: notifier)
         let e = DingEvent.test("a", startingIn: 3600)
-        scheduler.update(events: [e], next: e, settings: AlertSettings(leadMinutes: 5))
-        scheduler.update(events: [], next: nil, settings: AlertSettings(leadMinutes: 5))
+        scheduler.update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 5))
+        scheduler.update(events: [], next: nil, settings: AlertSettings(notificationLeadMinutes: 5))
         XCTAssertEqual(notifier.replacements.map(\.count), [1, 0])
     }
 
     func testNotificationsFireLeadMinutesBeforeStart() throws {
         let notifier = FakeNotifier()
         let e = DingEvent.test("a", startingIn: 3600)
-        Scheduler(notifier: notifier).update(events: [e], next: e, settings: AlertSettings(leadMinutes: 10))
+        Scheduler(notifier: notifier).update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 10))
         let fire = try XCTUnwrap(notifier.latest.first).fireDate
         XCTAssertEqual(e.start.timeIntervalSince(fire), 600, accuracy: 0.001)
     }
@@ -102,7 +102,7 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         suite.set(false, forKey: Pref.notifyJoinAction)
         let notifier = FakeNotifier()
         let e = DingEvent.test("a", startingIn: 3600)
-        Scheduler(notifier: notifier).update(events: [e], next: e, settings: AlertSettings(leadMinutes: 5))
+        Scheduler(notifier: notifier).update(events: [e], next: e, settings: AlertSettings(notificationLeadMinutes: 5))
         XCTAssertEqual(notifier.latest.first?.playSound, false)
         XCTAssertEqual(notifier.latest.first?.joinAction, false)
     }
@@ -111,10 +111,10 @@ final class SchedulerTests: IsolatedDefaultsTestCase {
         let notifier = FakeNotifier()
         let scheduler = Scheduler(notifier: notifier)
         let linked = DingEvent.test("a", startingIn: 3600)
-        scheduler.update(events: [linked], next: linked, settings: AlertSettings(leadMinutes: 0))
+        scheduler.update(events: [linked], next: linked, settings: AlertSettings(notificationLeadMinutes: 0))
         XCTAssertTrue(notifier.latest.isEmpty)
         let plain = DingEvent.test("b", startingIn: 3600, link: false)
-        scheduler.update(events: [plain], next: plain, settings: AlertSettings(leadMinutes: 5))
+        scheduler.update(events: [plain], next: plain, settings: AlertSettings(notificationLeadMinutes: 5))
         XCTAssertTrue(notifier.latest.isEmpty)
     }
 

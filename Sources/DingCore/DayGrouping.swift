@@ -5,6 +5,11 @@ public struct DayGroup: Identifiable, Equatable, Sendable {
     public let day: Date
     public let events: [DingEvent]
     public var id: Date { day }
+
+    public init(day: Date, events: [DingEvent]) {
+        self.day = day
+        self.events = events
+    }
 }
 
 public enum DayGrouping {

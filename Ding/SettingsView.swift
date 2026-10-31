@@ -13,8 +13,8 @@ struct SettingsView: View {
                 .tabItem { Label("Calendars", systemImage: "calendar") }
             MeetingsTab()
                 .tabItem { Label("Meetings", systemImage: "video") }
-            AlertsTab()
-                .tabItem { Label("Alerts", systemImage: "bell") }
+            AlertsTab(model: model)
+                .tabItem { Label("Notifications", systemImage: "bell") }
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
         }
@@ -154,10 +154,12 @@ struct ServiceOpenPicker: View {
 // MARK: - Alerts
 
 struct AlertsTab: View {
+    let model: AppModel
     @AppStorage(Pref.notifyLeadMinutes) private var lead = Pref.Default.notifyLeadMinutes
     @AppStorage(Pref.notifySound) private var sound = Pref.Default.notifySound
     @AppStorage(Pref.notifyJoinAction) private var joinAction = Pref.Default.notifyJoinAction
     @AppStorage(Pref.alertMode) private var mode = Pref.Default.alertMode
+    @AppStorage(Pref.alertLeadMinutes) private var alertLead = Pref.Default.alertLeadMinutes
     @AppStorage(Pref.alertIncludeAll) private var includeAll = Pref.Default.alertIncludeAll
 
     var body: some View {
@@ -171,17 +173,26 @@ struct AlertsTab: View {
                 Toggle("Show a Join button", isOn: $joinAction)
             }
             Section {
-                Picker("At start time", selection: $mode) {
-                    Text("Notification only").tag(AlertMode.off)
+                Picker("Style", selection: $mode) {
+                    Text("None").tag(AlertMode.off)
                     Text("Flash the screen edges").tag(AlertMode.edgeFlash)
                     Text("Full-screen alert").tag(AlertMode.fullScreen)
                 }
                 .pickerStyle(.radioGroup)
-                Toggle("Also alert for events without a meeting link", isOn: $includeAll)
+                Picker("Show it", selection: $alertLead) {
+                    Text("At the start time").tag(0)
+                    ForEach(Pref.alertLeadOptions.filter { $0 > 0 }, id: \.self) {
+                        Text($0 == 1 ? "1 min before" : "\($0) min before").tag($0)
+                    }
+                }
+                .disabled(mode == .off)
+                Toggle("Also for events without a meeting link", isOn: $includeAll)
+                Button("Preview") { model.previewAlert() }
+                    .disabled(mode == .off)
             } header: {
-                Text("Alert")
+                Text("Screen reminder")
             } footer: {
-                Text("Full-screen alerts show Join, Snooze and Dismiss. Press Esc to dismiss.")
+                Text("A bigger reminder on top of the notification, with its own timing. Full screen counts down to the start and shows Join, Snooze and Dismiss. Press Esc to dismiss.")
             }
         }
         .formStyle(.grouped)

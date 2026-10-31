@@ -6,7 +6,7 @@ final class AlertPlannerTests: DingCoreTestCase {
     func testPlanSchedulesNotificationAndAlert() {
         let now = date(2026, 10, 30, 9, 0)
         let e = event("a", date(2026, 10, 30, 10, 0))
-        let plan = AlertPlanner.plan([e], now: now, settings: AlertSettings(leadMinutes: 5, mode: .fullScreen))
+        let plan = AlertPlanner.plan([e], now: now, settings: AlertSettings(notificationLeadMinutes: 5, mode: .fullScreen))
         XCTAssertEqual(plan, [
             ScheduledAlert(eventID: "a", kind: .notification, fireDate: date(2026, 10, 30, 9, 55)),
             ScheduledAlert(eventID: "a", kind: .alert, fireDate: date(2026, 10, 30, 10, 0)),
@@ -16,7 +16,7 @@ final class AlertPlannerTests: DingCoreTestCase {
     func testPlanSkipsPastFireDates() {
         let now = date(2026, 10, 30, 9, 58)
         let e = event("a", date(2026, 10, 30, 10, 0))
-        let plan = AlertPlanner.plan([e], now: now, settings: AlertSettings(leadMinutes: 5, mode: .edgeFlash))
+        let plan = AlertPlanner.plan([e], now: now, settings: AlertSettings(notificationLeadMinutes: 5, mode: .edgeFlash))
         XCTAssertEqual(plan.map(\.kind), [.alert])
         XCTAssertTrue(AlertPlanner.plan([e], now: date(2026, 10, 30, 10, 1), settings: AlertSettings(mode: .fullScreen)).isEmpty)
     }
@@ -33,19 +33,71 @@ final class AlertPlannerTests: DingCoreTestCase {
         let allDay = event("d", date(2026, 10, 31), minutes: 1440, allDay: true)
         let timed = event("t", date(2026, 10, 30, 10, 0))
         XCTAssertTrue(AlertPlanner.plan([allDay], now: now, settings: AlertSettings(mode: .fullScreen)).isEmpty)
-        XCTAssertEqual(AlertPlanner.plan([timed], now: now, settings: AlertSettings(leadMinutes: 0, mode: .off)), [])
-        XCTAssertEqual(AlertPlanner.plan([timed], now: now, settings: AlertSettings(leadMinutes: 0, mode: .edgeFlash)).map(\.kind), [.alert])
+        XCTAssertEqual(AlertPlanner.plan([timed], now: now, settings: AlertSettings(notificationLeadMinutes: 0, mode: .off)), [])
+        XCTAssertEqual(AlertPlanner.plan([timed], now: now, settings: AlertSettings(notificationLeadMinutes: 0, mode: .edgeFlash)).map(\.kind), [.alert])
     }
 
     func testPlanIsSortedAndCapped() {
         let now = date(2026, 10, 30, 0, 0)
         let events = (0..<80).map { event("e\($0)", now.addingTimeInterval(Double(3600 + $0 * 3600))) }
-        let plan = AlertPlanner.plan(events.reversed(), now: now, settings: AlertSettings(leadMinutes: 5, mode: .off))
+        let plan = AlertPlanner.plan(events.reversed(), now: now, settings: AlertSettings(notificationLeadMinutes: 5, mode: .off))
         XCTAssertEqual(plan.count, AlertPlanner.maxNotifications)
         XCTAssertEqual(plan.map(\.fireDate), plan.map(\.fireDate).sorted())
         XCTAssertEqual(plan.first?.eventID, "e0")
     }
 
+
+    // MARK: Alert timing is independent of the notification's
+
+    private func alertTimes(_ settings: AlertSettings, start: Date, now: Date) -> [Date] {
+        AlertPlanner.plan([event("a", start)], now: now, settings: settings).filter { $0.kind == .alert }.map(\.fireDate)
+    }
+
+    func testAlertFiresTheConfiguredMinutesBeforeStart() {
+        let start = date(2026, 10, 30, 10)
+        let now = date(2026, 10, 30, 9)
+        for lead in [0, 1, 2, 5] {
+            let settings = AlertSettings(mode: .fullScreen, alertLeadMinutes: lead)
+            XCTAssertEqual(alertTimes(settings, start: start, now: now), [start.addingTimeInterval(-Double(lead) * 60)], "lead \(lead)")
+        }
+    }
+
+    func testNotificationAndAlertTimesAreIndependent() {
+        let start = date(2026, 10, 30, 10)
+        let settings = AlertSettings(notificationLeadMinutes: 10, mode: .fullScreen, alertLeadMinutes: 1)
+        let plan = AlertPlanner.plan([event("a", start)], now: date(2026, 10, 30, 9), settings: settings)
+        XCTAssertEqual(plan, [
+            ScheduledAlert(eventID: "a", kind: .notification, fireDate: date(2026, 10, 30, 9, 50)),
+            ScheduledAlert(eventID: "a", kind: .alert, fireDate: date(2026, 10, 30, 9, 59)),
+        ])
+    }
+
+    func testNotificationAndAlertCanFireTogether() {
+        let settings = AlertSettings(notificationLeadMinutes: 5, mode: .edgeFlash, alertLeadMinutes: 5)
+        let plan = AlertPlanner.plan([event("a", date(2026, 10, 30, 10))], now: date(2026, 10, 30, 9), settings: settings)
+        XCTAssertEqual(Set(plan.map(\.fireDate)), [date(2026, 10, 30, 9, 55)])
+        XCTAssertEqual(plan.count, 2)
+    }
+
+    func testAnAlertWhoseTimeHasPassedIsNotReplannedBeforeTheStart() {
+        // The plan is rebuilt on every reload; replanning a passed alert would repeat it each time.
+        let start = date(2026, 10, 30, 10)
+        let settings = AlertSettings(notificationLeadMinutes: 0, mode: .fullScreen, alertLeadMinutes: 2)
+        XCTAssertEqual(alertTimes(settings, start: start, now: date(2026, 10, 30, 9, 57)).count, 1)
+        XCTAssertTrue(alertTimes(settings, start: start, now: date(2026, 10, 30, 9, 58, 30)).isEmpty)
+        XCTAssertTrue(alertTimes(settings, start: start, now: date(2026, 10, 30, 9, 59, 59)).isEmpty)
+    }
+
+    func testNegativeAlertLeadMeansAtStart() {
+        let start = date(2026, 10, 30, 10)
+        let settings = AlertSettings(mode: .fullScreen, alertLeadMinutes: -3)
+        XCTAssertEqual(alertTimes(settings, start: start, now: date(2026, 10, 30, 9)), [start])
+    }
+
+    func testAlertLeadIsIgnoredWhenAlertsAreOff() {
+        let settings = AlertSettings(notificationLeadMinutes: 0, mode: .off, alertLeadMinutes: 2)
+        XCTAssertTrue(AlertPlanner.plan([event("a", date(2026, 10, 30, 10))], now: date(2026, 10, 30, 9), settings: settings).isEmpty)
+    }
 
     func testAlertModeIDs() {
         XCTAssertEqual(AlertMode.allCases.map(\.id), ["off", "edgeFlash", "fullScreen"])

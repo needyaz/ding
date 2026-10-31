@@ -99,12 +99,14 @@ final class AppModel {
             MainActor.assumeIsolated { self?.preferencesChanged() }
         }
 
-        // Wake, clock jumps, time zone changes and midnight all invalidate timers and day grouping.
+        // Wake, clock jumps, time zone changes and midnight all invalidate timers and day grouping. Becoming
+        // active covers a calendar or account added in System Settings whose change notification was missed.
         let reloadTriggers: [(NotificationCenter, Notification.Name)] = [
             (NSWorkspace.shared.notificationCenter, NSWorkspace.didWakeNotification),
             (center, .NSSystemClockDidChange),
             (center, .NSSystemTimeZoneDidChange),
             (center, .NSCalendarDayChanged),
+            (center, NSApplication.didBecomeActiveNotification),
         ]
         for (source, name) in reloadTriggers {
             source.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
@@ -167,8 +169,21 @@ final class AppModel {
         join(event)
     }
 
+    /// Shows the configured alert for a made-up meeting, so it can be seen without waiting for one. The
+    /// meeting starts when the alert would really appear relative to it, so the countdown looks right.
+    func previewAlert() {
+        let settings = Pref.alertSettings
+        let start = Date().addingTimeInterval(Double(max(settings.alertLeadMinutes, 0)) * 60)
+        let sample = DingEvent(
+            id: "preview", title: "Preview: Team standup", start: start, end: start.addingTimeInterval(30 * 60),
+            link: MeetingLink(service: .zoom, url: URL(string: "https://zoom.us/")!)
+        )
+        presentAlert(sample, settings.mode)
+    }
+
     func openSettings() {
         isMenuPresented = false
+        reload()  // so the calendar list is current even if a change was missed
         presentSettings()
     }
 }

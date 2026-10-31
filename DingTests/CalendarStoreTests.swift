@@ -97,6 +97,22 @@ final class CalendarStoreFakeTests: XCTestCase {
         XCTAssertEqual(changes, 1)
     }
 
+    func testTheStoreIsResetBeforeAChangeIsReported() {
+        // A new account's calendars only show up once cached data is dropped.
+        var resetsWhenReported: [Int] = []
+        store.onChange = { [unowned self] in resetsWhenReported.append(backing.resets) }
+        NotificationCenter.default.post(name: .EKEventStoreChanged, object: backing.changeSource)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertEqual(resetsWhenReported, [1])
+    }
+
+    func testEveryChangeResetsTheStore() {
+        store.onChange = {}
+        for _ in 0..<3 { NotificationCenter.default.post(name: .EKEventStoreChanged, object: backing.changeSource) }
+        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertEqual(backing.resets, 3)
+    }
+
     func testChangesFromOtherStoresAreIgnored() {
         var changes = 0
         store.onChange = { changes += 1 }

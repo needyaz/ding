@@ -18,7 +18,7 @@ final class SettingsTabTests: IsolatedDefaultsTestCase {
         render(GeneralTab())
         render(CalendarsTab(model: model))
         render(MeetingsTab())
-        render(AlertsTab())
+        render(AlertsTab(model: model))
         render(ShortcutsTab())
     }
 

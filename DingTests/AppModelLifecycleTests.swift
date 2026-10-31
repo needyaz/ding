@@ -115,6 +115,7 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
             (.default, .NSSystemClockDidChange),
             (.default, .NSSystemTimeZoneDidChange),
             (.default, .NSCalendarDayChanged),
+            (.default, NSApplication.didBecomeActiveNotification),
         ]
         for (center, name) in posts {
             let before = fake.fetchRanges.count
@@ -196,11 +197,62 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
         XCTAssertEqual(settingsShown, 1)
     }
 
+    func testOpeningSettingsRefreshesTheCalendarList() {
+        let before = fake.fetchRanges.count
+        fake.stubAccounts = [CalendarAccount(title: "New account", calendars: [])]
+        model.openSettings()
+        XCTAssertGreaterThan(fake.fetchRanges.count, before)
+        XCTAssertEqual(model.accounts.map(\.title), ["New account"])
+    }
+
+    func testANewAccountAppearsAfterACalendarChange() {
+        model.start(requestNotificationPermission: false)
+        settle(0.2)
+        XCTAssertTrue(model.accounts.isEmpty)
+        fake.stubAccounts = [CalendarAccount(title: "Work", calendars: [CalendarInfo(id: "1", title: "Team", color: .gray)])]
+        fake.onChange?()
+        XCTAssertEqual(model.accounts.map(\.title), ["Work"])
+    }
+
+    // MARK: Alert preview
+
+    func testPreviewShowsTheConfiguredAlertForASampleMeeting() throws {
+        suite.set("fullScreen", forKey: Pref.alertMode)
+        model.previewAlert()
+        let (event, mode) = try XCTUnwrap(alerts.first)
+        XCTAssertEqual(mode, .fullScreen)
+        XCTAssertEqual(event.title, "Preview: Team standup")
+        XCTAssertTrue(event.hasLink, "the sample needs a link so the Join button is shown")
+        XCTAssertFalse(event.isAllDay)
+    }
+
+    func testPreviewStartsWhereTheConfiguredLeadPutsTheCountdown() throws {
+        suite.set("fullScreen", forKey: Pref.alertMode)
+        suite.set(2, forKey: Pref.alertLeadMinutes)
+        model.previewAlert()
+        let event = try XCTUnwrap(alerts.first).0
+        XCTAssertEqual(event.start.timeIntervalSinceNow, 120, accuracy: 2)
+    }
+
+    func testPreviewAtStartTimeStartsNow() throws {
+        suite.set("fullScreen", forKey: Pref.alertMode)
+        suite.set(0, forKey: Pref.alertLeadMinutes)
+        model.previewAlert()
+        XCTAssertEqual(try XCTUnwrap(alerts.first).0.start.timeIntervalSinceNow, 0, accuracy: 2)
+    }
+
+    func testPreviewUsesWhateverModeIsSet() {
+        suite.set("edgeFlash", forKey: Pref.alertMode)
+        model.previewAlert()
+        XCTAssertEqual(alerts.map(\.1), [.edgeFlash])
+    }
+
     // MARK: Alert routing
 
     func testAlertIsPresentedAtStartWithTheConfiguredMode() {
         suite.set("fullScreen", forKey: Pref.alertMode)
         suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // these tests start meetings seconds away
         fake.stubEvents = [DingEvent.test("a", startingIn: 1)]
         model.start(requestNotificationPermission: false)
         settle(2.5)
@@ -211,6 +263,7 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
     func testEdgeFlashModeIsPassedThrough() {
         suite.set("edgeFlash", forKey: Pref.alertMode)
         suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // these tests start meetings seconds away
         fake.stubEvents = [DingEvent.test("a", startingIn: 1)]
         model.start(requestNotificationPermission: false)
         settle(2.5)
@@ -219,6 +272,7 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
 
     func testNoAlertWhenOff() {
         suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // these tests start meetings seconds away
         fake.stubEvents = [DingEvent.test("a", startingIn: 1)]
         model.start(requestNotificationPermission: false)
         settle(2.5)
@@ -228,6 +282,7 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
     func testNoAlertForHiddenCalendars() {
         suite.set("fullScreen", forKey: Pref.alertMode)
         suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // these tests start meetings seconds away
         Pref.disabledCalendars = ["off"]
         fake.stubEvents = [DingEvent.test("a", startingIn: 1, calendarID: "off")]
         model.start(requestNotificationPermission: false)
@@ -235,8 +290,22 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
         XCTAssertTrue(alerts.isEmpty)
     }
 
+    func testChangingTheAlertLeadReschedules() {
+        suite.set("fullScreen", forKey: Pref.alertMode)
+        suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(5, forKey: Pref.alertLeadMinutes)  // 5 minutes before: nothing fires for a meeting 3 seconds away
+        fake.stubEvents = [DingEvent.test("a", startingIn: 3)]
+        model.start(requestNotificationPermission: false)
+        settle(0.3)
+        XCTAssertTrue(alerts.isEmpty)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // now it's at the start, still ahead
+        settle(4)
+        XCTAssertEqual(alerts.map(\.0.id), ["a"])
+    }
+
     func testChangingTheAlertModeReschedules() {
         suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // these tests start meetings seconds away
         fake.stubEvents = [DingEvent.test("a", startingIn: 3)]
         model.start(requestNotificationPermission: false)
         settle(0.3)
@@ -284,6 +353,7 @@ final class AppModelLifecycleTests: IsolatedDefaultsTestCase {
         model.reload()
         XCTAssertEqual(notifier.latest.count, 1)
         suite.set(0, forKey: Pref.notifyLeadMinutes)
+        suite.set(0, forKey: Pref.alertLeadMinutes)  // these tests start meetings seconds away
         model.reload()
         XCTAssertTrue(notifier.latest.isEmpty)
     }

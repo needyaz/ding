@@ -26,12 +26,19 @@ final class CalendarStore: CalendarSource {
         changeObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged, object: self.store.changeSource, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.onChange?() }
+            MainActor.assumeIsolated { self?.storeDidChange() }
         }
     }
 
     deinit {
         if let changeObserver { NotificationCenter.default.removeObserver(changeObserver) }
+    }
+
+    /// EventKit caches what it has read, so after a change (a new account or calendar, say) a read can
+    /// return the old list until the store is reset.
+    private func storeDidChange() {
+        store.reset()
+        onChange?()
     }
 
     func requestAccess() async {

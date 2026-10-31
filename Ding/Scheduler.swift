@@ -31,7 +31,7 @@ final class Scheduler {
         notifier.replaceAll(with: NotificationPlanner.build(
             plan,
             events: events,
-            leadMinutes: settings.leadMinutes,
+            leadMinutes: settings.notificationLeadMinutes,
             playSound: Pref.defaults.bool(forKey: Pref.notifySound),
             joinAction: Pref.defaults.bool(forKey: Pref.notifyJoinAction)
         ))

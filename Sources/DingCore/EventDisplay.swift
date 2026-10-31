@@ -28,8 +28,19 @@ public enum EventDisplay {
         return text
     }
 
-    /// The full-screen alert's status line.
-    public static func startedText(now: Date, start: Date) -> String {
+    /// The label above the next meeting: "Next · in 12m", or "Happening now" once it has started.
+    public static func nextMeetingHeadline(start: Date, now: Date) -> String {
+        start <= now ? "Happening now" : "Next · in \(Countdown.text(until: start, now: now))"
+    }
+
+    /// The full-screen alert's status line: a live countdown before the start ("Starts in 0:59"), then
+    /// "Starting now" and "Started 2 min ago".
+    public static func alertStatus(now: Date, start: Date) -> String {
+        let untilStart = Int(start.timeIntervalSince(now).rounded(.up))
+        if untilStart > 0 {
+            let (minutes, seconds) = untilStart.quotientAndRemainder(dividingBy: 60)
+            return String(format: "Starts in %d:%02d", minutes, seconds)
+        }
         let elapsed = Int(now.timeIntervalSince(start))
         if elapsed < 5 { return "Starting now" }
         if elapsed < 60 { return "Started \(elapsed)s ago" }

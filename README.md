@@ -10,7 +10,7 @@ Ding reads the calendars already set up on your Mac (iCloud, Google, Exchange) t
 - Dropdown of upcoming events grouped by day, with calendar colors
 - One-click join for Zoom, Google Meet, Microsoft Teams and Webex, plus any other link found in the event
 - Choose which app or browser opens each service
-- Notification before meetings, with optional edge flash or full-screen alert
+- Notification before meetings, with an optional edge flash or full-screen reminder
 - Global hotkeys
 
 ## Requirements

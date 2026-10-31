@@ -58,7 +58,7 @@ final class UserNotificationSchedulerTests: XCTestCase {
             id: "e@1", title: "Planning", start: start, end: start.addingTimeInterval(1800),
             link: MeetingLink(service: .googleMeet, url: URL(string: "https://meet.google.com/abc-defg-hij")!)
         )
-        scheduler.update(events: [event], next: event, settings: AlertSettings(leadMinutes: 10))
+        scheduler.update(events: [event], next: event, settings: AlertSettings(notificationLeadMinutes: 10))
         let request = try XCTUnwrap(center.requests.first)
         XCTAssertEqual(request.content.title, "Planning")
         XCTAssertEqual(request.content.body, "Starts in 10 minutes · Google Meet")

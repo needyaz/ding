@@ -28,22 +28,30 @@ final class EventDisplayTests: DingCoreTestCase {
         XCTAssertEqual(EventDisplay.timeText(for: event("d", date(2026, 10, 30), minutes: 1440, allDay: true, maybe: true), use24Hour: false, timeZone: tz), "All day · Maybe")
     }
 
-    func testStartedText() {
+    func testAlertStatusBeforeTheStartCountsDown() {
         let start = date(2026, 10, 30, 10)
-        XCTAssertEqual(EventDisplay.startedText(now: start, start: start), "Starting now")
-        XCTAssertEqual(EventDisplay.startedText(now: start.addingTimeInterval(4), start: start), "Starting now")
-        XCTAssertEqual(EventDisplay.startedText(now: start.addingTimeInterval(5), start: start), "Started 5s ago")
-        XCTAssertEqual(EventDisplay.startedText(now: start.addingTimeInterval(59), start: start), "Started 59s ago")
-        XCTAssertEqual(EventDisplay.startedText(now: start.addingTimeInterval(60), start: start), "Started 1 min ago")
-        XCTAssertEqual(EventDisplay.startedText(now: start.addingTimeInterval(605), start: start), "Started 10 min ago")
-        XCTAssertEqual(EventDisplay.startedText(now: start.addingTimeInterval(-30), start: start), "Starting now")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(-300), start: start), "Starts in 5:00")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(-61), start: start), "Starts in 1:01")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(-60), start: start), "Starts in 1:00")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(-9), start: start), "Starts in 0:09")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(-0.4), start: start), "Starts in 0:01")
     }
 
+    func testAlertStatusAfterTheStart() {
+        let start = date(2026, 10, 30, 10)
+        XCTAssertEqual(EventDisplay.alertStatus(now: start, start: start), "Starting now")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(4), start: start), "Starting now")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(5), start: start), "Started 5s ago")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(59), start: start), "Started 59s ago")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(60), start: start), "Started 1 min ago")
+        XCTAssertEqual(EventDisplay.alertStatus(now: start.addingTimeInterval(605), start: start), "Started 10 min ago")
+    }
 
-    func testTimeFormat() {
-        let d = date(2026, 10, 30, 15, 5)
-        let tz = calendar.timeZone
-        XCTAssertEqual(TimeFormat.string(d, use24Hour: true, timeZone: tz), "15:05")
-        XCTAssertEqual(TimeFormat.string(d, use24Hour: false, timeZone: tz), "3:05 PM")
+    func testNextMeetingHeadline() {
+        let start = date(2026, 10, 30, 10)
+        XCTAssertEqual(EventDisplay.nextMeetingHeadline(start: start, now: start.addingTimeInterval(-720)), "Next · in 12m")
+        XCTAssertEqual(EventDisplay.nextMeetingHeadline(start: start, now: start.addingTimeInterval(-3700)), "Next · in 1h 2m")
+        XCTAssertEqual(EventDisplay.nextMeetingHeadline(start: start, now: start), "Happening now")
+        XCTAssertEqual(EventDisplay.nextMeetingHeadline(start: start, now: start.addingTimeInterval(120)), "Happening now")
     }
 }

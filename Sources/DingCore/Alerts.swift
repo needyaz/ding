@@ -1,5 +1,7 @@
 import Foundation
 
+/// How the bolder reminder is shown. The UI calls this the "screen reminder", since "alert" already means
+/// a notification style in macOS.
 public enum AlertMode: String, CaseIterable, Codable, Sendable, Identifiable {
     case off
     case edgeFlash
@@ -10,9 +12,9 @@ public enum AlertMode: String, CaseIterable, Codable, Sendable, Identifiable {
 
 public struct ScheduledAlert: Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
-        /// A macOS notification, `leadMinutes` before the start.
+        /// A macOS notification, `notificationLeadMinutes` before the start.
         case notification
-        /// The edge flash or full-screen takeover, at the start.
+        /// The edge flash or full-screen takeover, `alertLeadMinutes` before the start.
         case alert
     }
 
@@ -29,14 +31,23 @@ public struct ScheduledAlert: Equatable, Sendable {
 
 public struct AlertSettings: Equatable, Sendable {
     /// Minutes before start for the notification; 0 or less turns notifications off.
-    public var leadMinutes: Int
+    public var notificationLeadMinutes: Int
     public var mode: AlertMode
+    /// Minutes before start for the edge flash or full-screen alert; 0 means at the start time.
+    /// Independent of the notification's lead time.
+    public var alertLeadMinutes: Int
     /// By default only events with a meeting link alert.
     public var includeEventsWithoutLink: Bool
 
-    public init(leadMinutes: Int = 5, mode: AlertMode = .off, includeEventsWithoutLink: Bool = false) {
-        self.leadMinutes = leadMinutes
+    public init(
+        notificationLeadMinutes: Int = 5,
+        mode: AlertMode = .off,
+        alertLeadMinutes: Int = 0,
+        includeEventsWithoutLink: Bool = false
+    ) {
+        self.notificationLeadMinutes = notificationLeadMinutes
         self.mode = mode
+        self.alertLeadMinutes = alertLeadMinutes
         self.includeEventsWithoutLink = includeEventsWithoutLink
     }
 }
@@ -46,6 +57,8 @@ public enum AlertPlanner {
     public static let maxNotifications = 50
 
     /// Everything that should fire in the future, soonest first. All-day events never alert.
+    /// Something whose time has already passed is skipped, even if the meeting hasn't started: the plan is
+    /// rebuilt on every reload, so replanning it would show the same alert again each time.
     public static func plan(_ events: [DingEvent], now: Date, settings: AlertSettings) -> [ScheduledAlert] {
         let eligible = events
             .filter { !$0.isAllDay && ($0.hasLink || settings.includeEventsWithoutLink) }
@@ -54,22 +67,25 @@ public enum AlertPlanner {
         var plan: [ScheduledAlert] = []
         var notificationCount = 0
         for event in eligible {
-            if settings.leadMinutes > 0, notificationCount < maxNotifications {
-                let fireDate = event.start.addingTimeInterval(-Double(settings.leadMinutes) * 60)
+            if settings.notificationLeadMinutes > 0, notificationCount < maxNotifications {
+                let fireDate = event.start.addingTimeInterval(-Double(settings.notificationLeadMinutes) * 60)
                 if fireDate > now {
                     plan.append(ScheduledAlert(eventID: event.id, kind: .notification, fireDate: fireDate))
                     notificationCount += 1
                 }
             }
-            if settings.mode != .off, event.start > now {
-                plan.append(ScheduledAlert(eventID: event.id, kind: .alert, fireDate: event.start))
+            if settings.mode != .off {
+                let fireDate = event.start.addingTimeInterval(-Double(max(settings.alertLeadMinutes, 0)) * 60)
+                if fireDate > now {
+                    plan.append(ScheduledAlert(eventID: event.id, kind: .alert, fireDate: fireDate))
+                }
             }
         }
         return plan.sorted { $0.fireDate < $1.fireDate }
     }
 }
 
-/// Alerts waiting for their start time, drained by a single timer.
+/// Alerts waiting to fire, drained by a single timer.
 public struct AlertQueue: Equatable, Sendable {
     public private(set) var pending: [ScheduledAlert]
 
