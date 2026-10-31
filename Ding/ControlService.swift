@@ -16,7 +16,11 @@ final class ControlService {
         var calendar: () -> Calendar = { .current }
     }
 
+    /// An assistant that has been talked into it could open meeting after meeting. A person asks for one at a time.
+    static let minimumSecondsBetweenOpens: TimeInterval = 3
+
     private let environment: Environment
+    private var lastOpen: Date?
 
     init(environment: Environment) {
         self.environment = environment
@@ -70,6 +74,8 @@ final class ControlService {
         case .openMeeting:
             let id = try Self.string(params["id"], named: "id")
             let target = try ControlAPI.openTarget(events, now: now, id: id)
+            if let lastOpen, now.timeIntervalSince(lastOpen) < Self.minimumSecondsBetweenOpens { throw ControlFailure.tooFast }
+            lastOpen = now
             environment.join(target)
             // Opening is allowed without seeing the schedule, so the confirmation mustn't reveal which meeting it was
             // unless the user also allowed that.

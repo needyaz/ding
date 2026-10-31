@@ -5,7 +5,7 @@ import XCTest
 
 @MainActor
 final class ControlServiceTests: XCTestCase {
-    private let now = Date(timeIntervalSince1970: 1_800_000_000)
+    private var now = Date(timeIntervalSince1970: 1_800_000_000)
     private var permissions = ControlPermissions(canReadSchedule: true, canOpenMeetings: true)
     private var access = CalendarAccess.granted
     private var events: [DingEvent] = []
@@ -159,6 +159,16 @@ final class ControlServiceTests: XCTestCase {
         XCTAssertEqual(errorCode(response), "cannot_open")
         let json = String(decoding: try JSONEncoder().encode(response), as: UTF8.self)
         XCTAssertFalse(json.contains("Meeting plain"), "the title must not leak through a refusal")
+    }
+
+    func testOpeningIsRateLimited() {
+        events = [meeting("a", in: 600)]
+        XCTAssertTrue(request("open_meeting").ok)
+        XCTAssertEqual(errorCode(request("open_meeting")), "too_fast", "a second open in the same instant is refused")
+        XCTAssertEqual(joined.count, 1)
+        now = now.addingTimeInterval(ControlService.minimumSecondsBetweenOpens)
+        XCTAssertTrue(request("open_meeting").ok, "and allowed again after a few seconds")
+        XCTAssertEqual(joined.count, 2)
     }
 
     func testJoiningWithScheduleAccessAlsoReportsTheMeeting() {

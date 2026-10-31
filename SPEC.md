@@ -133,7 +133,7 @@ Two separate things, each with its own timing. (The code calls the second an "al
 - Protocol: MCP over newline-delimited JSON-RPC 2.0; versions 2025-06-18, 2025-03-26 and 2024-11-05; tools only. Batches, notifications and pings are handled.
 - Transport: a Unix socket (owner-only) in the app group container, so the sandboxed helper and sandboxed app need no network entitlement. Ding checks the
   code signature of every program that connects and hangs up on any that isn't the helper (identifier `blue.luci.Ding.mcp`) signed by the same team. The helper can't do the same in reverse (the sandbox
-  forbids inspecting another process), but it only ever sends a method name and small arguments.
+  forbids inspecting another process), but it only ever sends a method name and small arguments. The server holds at most 16 connections, drops a peer that goes 30 seconds without a request, and refuses a second `open_meeting` within 3 seconds.
 - One Ding instance at a time (`LSMultipleInstancesProhibited`), so there is one owner of the socket.
 
 ## Privacy
@@ -179,9 +179,11 @@ Anything that touches the system sits behind a small protocol or closure so test
 
 - `project.yml` (XcodeGen) generates `Ding.xcodeproj`, which isn't checked in.
 - A `Makefile` with the same conventions as the author's other projects: `make` lists targets, `make menu` is an fzf picker, `make run` builds and launches, `make test`, `make coverage`, `make mcp-smoke` (handshake and tool list through the bundled helper). The app tests run inside Ding, which allows only one instance, so `make test-app` quits a running Ding first.
-- The App Store listing is declared in `listing/metadata.json` (text, URLs, App Review notes) and `listing/screenshots/`. `make listing-apply` and `make screenshots-apply`
-  (build box only, same targets as Mylo, with `-dump` and `-diff` that only read) push them through the App Store Connect API and read them back. The Deno scripts `scripts/listing_metadata.ts` and
-  `scripts/listing_screenshots.ts` do it; `make test-listing` tests them offline.
+- The App Store listing is declared in `listing/`: `metadata.json` (text, URLs, copyright, release type, App Review notes), `app.json` (category,
+  age rating, content rights, price, availability) and `screenshots/`. On the build box `make release` uploads to TestFlight and applies all of it through the
+  App Store Connect API with read-back (`store-setup-`, `listing-` and `screenshots-` `dump`/`diff`/`apply` targets, as in Mylo); `make submit` is the separate
+  step that sends the version to App Review, and `make beta` promotes a build to the public TestFlight beta. The App Review contact comes from the build box's
+  environment, never the repo. The release version is `1.0.<commit count>`. `make test-listing` tests the Deno tools offline.
 - `make screenshots` renders the App Store screenshots from the real views with fixture data (debug builds only; see `listing/README.md`).
 - `design/make_icon.py` builds the app icon set from the source art in `design/`. The menu bar glyph is drawn in code (`MenuBarGlyph`).
 

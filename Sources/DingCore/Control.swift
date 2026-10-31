@@ -72,6 +72,7 @@ public enum ControlFailure: Error, Equatable, Sendable {
     case meetingNotFound(String)
     case nothingToOpen
     case cannotOpen
+    case tooFast
     case invalidArgument(String)
 
     /// A short, stable code for clients that want to branch on it.
@@ -83,6 +84,7 @@ public enum ControlFailure: Error, Equatable, Sendable {
         case .meetingNotFound: "meeting_not_found"
         case .nothingToOpen: "nothing_to_open"
         case .cannotOpen: "cannot_open"
+        case .tooFast: "too_fast"
         case .invalidArgument: "invalid_argument"
         }
     }
@@ -101,6 +103,8 @@ public enum ControlFailure: Error, Equatable, Sendable {
             "There's no current or upcoming meeting with a link to open."
         case .cannotOpen:
             "That meeting has no Zoom, Google Meet, Microsoft Teams or Webex link, so Ding won't open it for an assistant."
+        case .tooFast:
+            "A meeting was opened a moment ago. Wait a few seconds, and only open another if the user asks."
         case .invalidArgument(let detail):
             detail
         }

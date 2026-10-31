@@ -67,12 +67,12 @@ export async function findApp(jwt: string): Promise<string> {
   return id;
 }
 
-export interface AscVersion { id: string; versionString: string; state: string }
+export interface AscVersion { id: string; versionString: string; state: string; copyright?: string; releaseType?: string }
 
 /** The app's macOS versions, newest first. */
 export async function macVersions(jwt: string, appId: string): Promise<AscVersion[]> {
   const versions = await asc(jwt, `/apps/${appId}/appStoreVersions?filter[platform]=${PLATFORM}&limit=10`);
-  return versions.data.map((v: Json) => ({ id: v.id, versionString: v.attributes.versionString, state: v.attributes.appStoreState }));
+  return versions.data.map((v: Json) => ({ id: v.id, versionString: v.attributes.versionString, state: v.attributes.appStoreState, copyright: v.attributes.copyright ?? "", releaseType: v.attributes.releaseType ?? "" }));
 }
 
 /** The version to edit if there is one, otherwise the newest (read-only). */

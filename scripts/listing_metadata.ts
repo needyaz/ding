@@ -25,6 +25,11 @@ const DESIRED_PATH = new URL("../listing/metadata.json", import.meta.url).pathna
 
 export type Section = "version" | "info";
 
+/** Attributes of the version record itself. */
+export const VERSION_FIELDS = ["copyright", "releaseType"] as const;
+export type VersionField = typeof VERSION_FIELDS[number];
+export const RELEASE_TYPES = ["MANUAL", "AFTER_APPROVAL", "SCHEDULED"];
+
 /** Field → [store resource, Apple's character limit]. */
 export const FIELDS = {
   description: { section: "version", limit: 4000 },
@@ -48,11 +53,13 @@ export type Review = Partial<Record<ReviewField, string>>;
 
 export interface Desired {
   localizations: Record<string, Localization>;
+  /** Copyright line and how the version is released; sparse like everything else. */
+  version?: Partial<Record<VersionField, string>>;
   review?: Review;
 }
 
 export interface Change {
-  section: Section | "review";
+  section: Section | "review" | "release";
   locale?: string;
   field: string;
   from: string;
@@ -74,6 +81,11 @@ export function validate(desired: Desired): string[] {
     }
     if (loc.keywords && /,\s|\s,/.test(loc.keywords)) problems.push(`[${locale}] keywords: no spaces around commas (they waste the 100 characters)`);
   }
+  for (const [field, value] of Object.entries(desired.version ?? {})) {
+    if (!(VERSION_FIELDS as readonly string[]).includes(field)) problems.push(`version: unknown field "${field}"`);
+    else if (typeof value !== "string" || value.length === 0) problems.push(`version: ${field} must be a non-empty string`);
+    else if (field === "releaseType" && !RELEASE_TYPES.includes(value)) problems.push(`version: releaseType must be one of ${RELEASE_TYPES.join(", ")}`);
+  }
   for (const [field, value] of Object.entries(desired.review ?? {})) {
     if (!(REVIEW_FIELDS as readonly string[]).includes(field)) problems.push(`review: unknown field "${field}"`);
     else if (typeof value !== "string" || value.length === 0) problems.push(`review: ${field} must be a non-empty string`);
@@ -93,12 +105,26 @@ export function computeDiff(live: Desired, desired: Desired): Change[] {
       if (from !== to) changes.push({ section: FIELDS[field].section, locale, field, from, to });
     }
   }
+  for (const field of Object.keys(desired.version ?? {}) as VersionField[]) {
+    const to = desired.version![field] ?? "";
+    const from = live.version?.[field] ?? "";
+    if (from !== to) changes.push({ section: "release", field, from, to });
+  }
   for (const field of Object.keys(desired.review ?? {}) as ReviewField[]) {
     const to = desired.review![field] ?? "";
     const from = live.review?.[field] ?? "";
     if (from !== to) changes.push({ section: "review", field, from, to });
   }
   return changes;
+}
+
+/** The App Review contact comes from the build box's environment, so a name and phone number never sit in a public repo. */
+export function reviewContactFromEnv(env: Record<string, string>): Review {
+  const fields: [ReviewField, string][] = [
+    ["contactFirstName", "REVIEW_CONTACT_FIRST_NAME"], ["contactLastName", "REVIEW_CONTACT_LAST_NAME"],
+    ["contactPhone", "REVIEW_CONTACT_PHONE"], ["contactEmail", "REVIEW_CONTACT_EMAIL"],
+  ];
+  return Object.fromEntries(fields.filter(([, name]) => env[name]).map(([field, name]) => [field, env[name]]));
 }
 
 /** Whether a change can be written without an editable version (promotional text on an existing locale can). */
@@ -135,7 +161,11 @@ async function read(jwt: string): Promise<Live | null> {
   const { target, editable } = picked;
   const live: Live = {
     appId,
-    desired: { localizations: {}, review: {} },
+    desired: {
+      localizations: {},
+      version: { copyright: target.copyright ?? "", releaseType: target.releaseType ?? "" },
+      review: {},
+    },
     versionId: target.id,
     versionString: target.versionString,
     versionState: target.state,
@@ -254,6 +284,14 @@ async function apply(jwt: string, live: Live, desired: Desired, versionToCreate:
     }
   }
 
+  if (changes.some((c) => c.section === "release")) {
+    step("PATCH copyright and release type…");
+    await asc(jwt, `/appStoreVersions/${state.versionId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ data: { type: "appStoreVersions", id: state.versionId, attributes: desired.version } }),
+    });
+  }
+
   if (changes.some((c) => c.section === "review")) {
     const attributes = desired.review!;
     if (state.reviewDetailId) {
@@ -268,7 +306,7 @@ async function apply(jwt: string, live: Live, desired: Desired, versionToCreate:
         method: "POST",
         body: JSON.stringify({ data: {
           type: "appStoreReviewDetails",
-          attributes,
+          attributes: { demoAccountRequired: false, ...attributes },
           relationships: { appStoreVersion: { data: { type: "appStoreVersions", id: state.versionId } } },
         } }),
       });
@@ -286,6 +324,7 @@ function printChanges(changes: Change[]) {
 
 async function loadDesired(): Promise<Desired> {
   const desired = JSON.parse(await Deno.readTextFile(DESIRED_PATH)) as Desired;
+  desired.review = { ...desired.review, ...reviewContactFromEnv(Deno.env.toObject()) };
   const problems = validate(desired);
   if (problems.length > 0) {
     for (const p of problems) fail(p);

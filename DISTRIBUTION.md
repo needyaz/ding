@@ -29,26 +29,35 @@ The marketing version is `1.0.<build number>`, stamped at archive time like Mylo
    Make a new commit first.
 4. Apple processes the build for a few minutes before it appears in TestFlight.
 
-## The App Store listing
+## One command: `make release`
 
-Text and screenshots are declared in `listing/` and pushed with the same API key, on the build box only. The targets match Mylo's:
+On the build box, `make release` does everything up to App Review, in this order (as Mylo's `release-ios`):
+
+1. **`testflight`:** preflight, `pull`, then the duplicate-build check (`scripts/asc_build_check.ts`: a build already on App Store
+   Connect is reused, a burned number stops the run, anything unknown builds as usual), archive and upload.
+2. **`store-setup-apply`:** the app's one-time settings from `listing/app.json`: content rights, category, age rating, price, availability.
+3. **`listing-apply`:** the listing text, copyright, release type and App Review information from `listing/metadata.json`. It creates
+   the editable version as `VERSION` (default `1.0.<commit count>`, what step 1 just stamped, so keep new commits out in between).
+4. **`screenshots-apply`:** the screenshots from `listing/screenshots/`. The locale has to exist first, which step 3 ensures.
+
+Then **`make submit`** attaches the build to the version and sends it to App Review (`DRY=1` previews). It is separate because it is the
+one step that can't be taken back.
+
+Each step is also a target on its own, and every write target has a read-only twin:
 
 ```sh
-make listing-dump        make screenshots-dump     # print what the store has (read-only)
-make listing-diff        make screenshots-diff     # what differs from listing/ (read-only)
-make listing-apply       make screenshots-apply    # write, then read back and verify
+make store-setup-diff    make listing-dump    make listing-diff    make screenshots-dump    make screenshots-diff
+make beta                # promote the build to the public TestFlight beta; re-run until Apple finishes processing
 ```
 
-- `scripts/listing_metadata.ts` handles the name, subtitle, description, keywords, promotional text, URLs and App Review notes.
-  `scripts/listing_screenshots.ts` handles the screenshot set (2880 × 1800, in file-name order; any difference replaces the whole set,
-  because Apple orders by upload). Fields `metadata.json` doesn't mention are never touched.
-- `listing-apply` creates the editable version as `VERSION` (default `1.0.<commit count>`, what `make testflight` just stamped, so run it with no new commits in between) if none exists.
-  Description, keywords, review notes and screenshots can only change on an editable version; promotional text can change any time.
-- Order: `make testflight`, then `make listing-apply`, then `make screenshots-apply` (the locale must exist first).
+- Description, keywords, copyright, release type, review notes and screenshots can only change on an editable version; promotional text
+  can change any time. `apply` refuses rather than guess.
+- Screenshots are rendered anywhere with `make screenshots` and committed; a different set replaces the whole one (Apple orders by upload).
 - `make listing-check` and `make test-listing` run offline on any machine, with no credentials.
-- Category, age rating, privacy label, pricing, the privacy policy URL, copyright and the review contact are set once in the web UI,
-  as for the other apps.
-- This tooling has been tested offline only, so run the read-only `diff` targets first on the build box.
+- **App Review contact:** set `REVIEW_CONTACT_FIRST_NAME`, `REVIEW_CONTACT_LAST_NAME`, `REVIEW_CONTACT_PHONE` and `REVIEW_CONTACT_EMAIL` in
+  the build box's `~/.zshenv`, next to the API key. They are applied with the listing, and never live in the repo, which is public.
+- **Only the web UI:** the privacy "nutrition label" (no API), the privacy policy URL and the public TestFlight group named "Public Beta".
+- This tooling has been tested offline only, so on the first run use the read-only `-diff` targets before the `-apply` ones.
 
 ## One-time setup
 

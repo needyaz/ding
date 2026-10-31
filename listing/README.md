@@ -1,9 +1,10 @@
 # App Store listing assets
 
-`metadata.json` is the desired state of the listing text (name, subtitle, description, keywords, promotional text, URLs and
-App Review notes); `screenshots/<locale>/` is the desired screenshot set. They are pushed with `make listing-apply` and
-`make screenshots-apply` (build box only; see `DISTRIBUTION.md`). A field the file doesn't mention is never touched, and one-time
-items (category, age rating, privacy label and policy URL, pricing, copyright, the review contact) stay in the App Store Connect web UI.
+`metadata.json` is the desired state of the listing text (name, subtitle, description, keywords, promotional text, URLs, copyright,
+release type and App Review notes); `app.json` is the app's one-time store settings (category, age rating, content rights, price,
+availability); `screenshots/<locale>/` is the desired screenshot set. They are pushed with `make listing-apply` and
+`make screenshots-apply`, or all of it with `make release` (build box only; see `DISTRIBUTION.md`). A field the file doesn't mention
+is never touched. The review contact comes from the build box's environment, not from this folder.
 
 ## Text
 

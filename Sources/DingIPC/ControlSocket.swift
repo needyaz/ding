@@ -12,10 +12,18 @@ public final class ControlSocketServer: @unchecked Sendable {
     private let handler: Handler
     private var listenFD: Int32 = -1
     private let lock = NSLock()
+    private var openConnections = 0
 
-    public init(path: String, requirement: String?, handler: @escaping Handler) {
+    /// Only the helper connects, and it opens one short connection per request, so these are generous. They bound what
+    /// a stuck or misbehaving peer can hold: a thread each, for no longer than `idleTimeout` without a request.
+    private let maxConnections: Int
+    private let idleTimeout: TimeInterval
+
+    public init(path: String, requirement: String?, maxConnections: Int = 16, idleTimeout: TimeInterval = 30, handler: @escaping Handler) {
         self.path = path
         self.requirement = requirement
+        self.maxConnections = maxConnections
+        self.idleTimeout = idleTimeout
         self.handler = handler
     }
 
@@ -48,16 +56,33 @@ public final class ControlSocketServer: @unchecked Sendable {
                 if errno == EINTR { continue }
                 return  // closed by stop()
             }
+            guard reserveConnection() else { close(client); continue }
             var one: Int32 = 1
             setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &one, socklen_t(MemoryLayout<Int32>.size))
-            let thread = Thread { [handler, requirement] in
-                defer { close(client) }
+            // A peer that stops talking is dropped instead of holding its thread forever.
+            let whole = idleTimeout.rounded(.down)
+            var tv = timeval(tv_sec: Int(whole), tv_usec: suseconds_t((idleTimeout - whole) * 1_000_000))
+            setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+            setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+            let thread = Thread { [handler, requirement, weak self] in
+                defer { close(client); self?.releaseConnection() }
                 if let requirement, !PeerVerifier.peerSatisfies(requirement, fd: client) { return }
                 Self.serve(client, handler: handler)
             }
             thread.name = "ding.control.client"
             thread.start()
         }
+    }
+
+    private func reserveConnection() -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        guard openConnections < maxConnections else { return false }
+        openConnections += 1
+        return true
+    }
+
+    private func releaseConnection() {
+        lock.lock(); openConnections -= 1; lock.unlock()
     }
 
     private static func serve(_ fd: Int32, handler: @escaping Handler) {

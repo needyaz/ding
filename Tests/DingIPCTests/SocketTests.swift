@@ -270,6 +270,46 @@ final class ControlSocketTests: XCTestCase {
         XCTAssertNil(try Framing.read(from: fd), "the server should hang up without replying")
     }
 
+    func testASilentPeerIsDroppedAfterTheIdleTimeout() throws {
+        let path = tempSocketPath()
+        let server = ControlSocketServer(path: path, requirement: nil, idleTimeout: 0.3) { $0 }
+        try server.start()
+        servers.append(server)
+        let fd = try openClient(path)
+        defer { close(fd) }
+        var tv = timeval(tv_sec: 3, tv_usec: 0)
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        let started = Date()
+        XCTAssertNil(try Framing.read(from: fd), "the server hangs up on a peer that sends nothing")
+        XCTAssertLessThan(Date().timeIntervalSince(started), 2)
+    }
+
+    func testConnectionsBeyondTheCapAreRefusedAndASlotFreesWhenOneCloses() throws {
+        let path = tempSocketPath()
+        let server = ControlSocketServer(path: path, requirement: nil, maxConnections: 2, idleTimeout: 10) { $0 }
+        try server.start()
+        servers.append(server)
+        let first = try openClient(path), second = try openClient(path)
+        // Give the server a moment to count both before the third arrives.
+        Thread.sleep(forTimeInterval: 0.2)
+        let third = try openClient(path)
+        defer { close(second); close(third) }
+        var tv = timeval(tv_sec: 2, tv_usec: 0)
+        setsockopt(third, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        XCTAssertNil(try Framing.read(from: third), "the third connection is closed at once")
+        close(first)
+        Thread.sleep(forTimeInterval: 0.3)
+        XCTAssertEqual(try ControlSocketClient(path: path, timeout: 3).request(Data("again".utf8)), Data("again".utf8))
+    }
+
+    private func openClient(_ path: String) throws -> Int32 {
+        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        var address = try ControlSocketServer.address(for: path)
+        let result = withUnsafePointer(to: &address) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) } }
+        XCTAssertEqual(result, 0)
+        return fd
+    }
+
     func testAPathThatIsTooLongIsRejected() {
         let path = "/tmp/" + String(repeating: "a", count: 200)
         let server = ControlSocketServer(path: path, requirement: nil) { $0 }

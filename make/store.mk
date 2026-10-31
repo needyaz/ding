@@ -19,7 +19,7 @@
 # CURRENT_PROJECT_VERSION / MARKETING_VERSION so the app and its bundled MCP
 # helper always agree.
 
-RELEASE_TOOLS := git xcodebuild xcodegen
+RELEASE_TOOLS := git xcodebuild xcodegen deno
 
 ASC_AUTH := -authenticationKeyPath $(ASC_KEY_FILEPATH) \
             -authenticationKeyID $(ASC_KEY_ID) \
@@ -60,6 +60,14 @@ pull:
 VERSION ?= 1.0.$(shell git rev-list --count HEAD)
 LISTING_DENO := deno run --allow-net --allow-env --allow-read
 
+.PHONY: store-setup-diff store-setup-apply
+## [Release|box:prod-build] Diff the app's one-time store settings (category, age rating, price, ...) vs listing/app.json (read-only)
+store-setup-diff: _preflight-listing
+	$(LISTING_DENO) scripts/store_setup.ts diff
+## [Release|box:prod-build] Apply category, age rating, content rights, price and availability, then read back and verify
+store-setup-apply: _preflight-listing
+	$(LISTING_DENO) scripts/store_setup.ts apply
+
 .PHONY: listing-dump listing-diff listing-apply
 ## [Release|box:prod-build] Print live store listing metadata (read-only)
 listing-dump: _preflight-listing
@@ -93,7 +101,46 @@ _preflight-listing: listing-check
 testflight:
 	@$(MAKE) --no-print-directory _preflight
 	@$(MAKE) --no-print-directory pull
-	@$(MAKE) --no-print-directory _build-upload
+	@$(MAKE) --no-print-directory _testflight
+
+# Has App Store Connect already got this build number? (scripts/asc_build_check.ts, as in Mylo and Mimir.)
+#   REUSE  -> already up (valid or processing): skip the build and upload
+#   BURNED -> the number belongs to a failed/invalid/expired build: stop, a new commit is needed
+#   ABSENT, or any error -> build as usual; the check never blocks a release
+.PHONY: _testflight
+_testflight:
+	@n=$$(git rev-list --count HEAD); \
+	 verdict=$$(deno run --allow-net --allow-env --allow-read scripts/asc_build_check.ts $$n 2>/dev/null || true); \
+	 case "$$verdict" in \
+	   REUSE)  echo "✓ build $$n is already on App Store Connect (valid or processing): skipping build and upload";; \
+	   BURNED) echo "✗ build number $$n is used by a FAILED/INVALID/expired build on App Store Connect."; \
+	           echo "  Re-uploading cannot succeed. Make a new commit (the build number is the commit count) and re-run."; \
+	           exit 1;; \
+	   *)      $(MAKE) --no-print-directory _build-upload;; \
+	 esac
+
+.PHONY: beta
+## [Release] Promote the current build to the public TestFlight beta (re-run until Apple finishes processing)
+beta: _preflight-listing
+	deno run --allow-net --allow-env --allow-read scripts/asc_promote_beta.ts $$(git rev-list --count HEAD)
+
+# One command, as Mylo's release-ios: build and upload, then everything the store needs, in this order. It stops short
+# of App Review: `make submit` is the one step that sends the version to Apple.
+.PHONY: release
+## [Release] Full release: TestFlight upload, app settings, listing, screenshots (then `make submit`)
+release:
+	@$(MAKE) --no-print-directory _preflight
+	@$(MAKE) --no-print-directory pull
+	@$(MAKE) --no-print-directory _testflight
+	@$(MAKE) --no-print-directory store-setup-apply
+	@$(MAKE) --no-print-directory listing-apply
+	@$(MAKE) --no-print-directory screenshots-apply
+	@echo "✓ release $(VERSION) is on App Store Connect with its listing; run 'make submit' to send it to App Review"
+
+.PHONY: submit
+## [Release] Attach the build to version VERSION and submit it to App Review (DRY=1 to preview)
+submit: _preflight-listing
+	deno run --allow-net --allow-env --allow-read scripts/submit.ts --version $(VERSION) $(if $(DRY),--dry-run)
 
 # Archive, then export with destination=upload: the export step IS the upload.
 # A re-run without a new commit re-uploads a build number Apple already has, and

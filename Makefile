@@ -103,11 +103,12 @@ test-listing: listing-check
 	deno test --allow-read scripts/
 
 .PHONY: listing-check
-## [Build] Validate listing/metadata.json and listing/screenshots against Apple's limits (offline)
+## [Build] Validate listing/ (metadata.json, app.json, screenshots) against Apple's limits (offline)
 listing-check:
 	@command -v deno >/dev/null 2>&1 || { echo "deno not installed — run: brew install deno"; exit 1; }
-	@deno run --allow-read scripts/listing_metadata.ts check
+	@deno run --allow-read --allow-env scripts/listing_metadata.ts check
 	@deno run --allow-read scripts/listing_screenshots.ts check
+	@deno run --allow-read scripts/store_setup.ts check
 
 .PHONY: test-core
 ## [Tests] DingCore unit tests (link detection, opener routing, grouping, scheduling)

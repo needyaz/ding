@@ -189,7 +189,7 @@ final class ControlAPITests: DingCoreTestCase {
     // MARK: Failures
 
     func testEveryFailureHasACodeAndAReadableMessage() {
-        let failures: [ControlFailure] = [.scheduleAccessOff, .openingOff, .noCalendarAccess, .meetingNotFound("x"), .nothingToOpen, .cannotOpen, .invalidArgument("bad")]
+        let failures: [ControlFailure] = [.scheduleAccessOff, .openingOff, .noCalendarAccess, .meetingNotFound("x"), .nothingToOpen, .cannotOpen, .invalidArgument("bad"), .tooFast]
         XCTAssertEqual(Set(failures.map(\.code)).count, failures.count, "codes must be distinct")
         for failure in failures {
             XCTAssertFalse(failure.message.isEmpty)

@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { computeDiff, type Desired, needsEditableVersion, validate } from "./listing_metadata.ts";
+import { computeDiff, type Desired, needsEditableVersion, reviewContactFromEnv, validate } from "./listing_metadata.ts";
 
 const desired = (loc: Record<string, string>, review?: Record<string, string>): Desired => ({ localizations: { "en-US": loc }, review });
 
@@ -57,4 +57,18 @@ Deno.test("only promotional text on an existing locale can change without an edi
   assertEquals(needsEditableVersion(change("version", "description"), true), true);
   assertEquals(needsEditableVersion(change("info", "name"), true), true);
   assertEquals(needsEditableVersion(change("review", "notes"), true), true);
+});
+
+Deno.test("version attributes are validated and diffed like the rest", () => {
+  const withVersion = (version: Record<string, string>): Desired => ({ localizations: { "en-US": { name: "x" } }, version });
+  assertEquals(validate(withVersion({ copyright: "© 2026 Blue Luci", releaseType: "MANUAL" })), []);
+  assertEquals(validate(withVersion({ releaseType: "WHENEVER" })).length, 1);
+  assertEquals(validate(withVersion({ price: "0" })).length, 1);
+  const live: Desired = { localizations: { "en-US": { name: "x" } }, version: { copyright: "old", releaseType: "MANUAL" } };
+  assertEquals(computeDiff(live, withVersion({ copyright: "new", releaseType: "MANUAL" })), [{ section: "release", field: "copyright", from: "old", to: "new" }]);
+});
+
+Deno.test("the review contact comes from the environment and only when set", () => {
+  assertEquals(reviewContactFromEnv({}), {});
+  assertEquals(reviewContactFromEnv({ REVIEW_CONTACT_FIRST_NAME: "A", REVIEW_CONTACT_EMAIL: "a@example.com", PATH: "/bin" }), { contactFirstName: "A", contactEmail: "a@example.com" });
 });
