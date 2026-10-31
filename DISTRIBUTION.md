@@ -55,7 +55,9 @@ make beta                # promote the build to the public TestFlight beta; re-r
 - `make listing-check` and `make test-listing` run offline on any machine, with no credentials.
 - **App Review contact:** set `REVIEW_CONTACT_FIRST_NAME`, `REVIEW_CONTACT_LAST_NAME`, `REVIEW_CONTACT_PHONE` and `REVIEW_CONTACT_EMAIL` in
   the build box's `~/.zshenv`, next to the API key. They are applied with the listing, and never live in the repo, which is public.
-- **Only the web UI:** the privacy "nutrition label" (no API), the public TestFlight group named "Public Beta".
+- **Only the web UI:** the privacy "nutrition label" and the public TestFlight group named "Public Beta". The label is required before App Review
+  accepts a version: App Store Connect > the app > App Privacy > Get Started > "No, we do not collect data from this app" > Save > Publish. If
+  it is missing, `submit` stops with that instruction; answer it and run `make submit`.
 - This tooling has been tested offline only, so on the first run use the read-only `-diff` targets before the `-apply` ones.
 
 ## One-time setup

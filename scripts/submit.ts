@@ -17,6 +17,16 @@ export function buildNumberFromVersion(version: string): string | null {
   return /^\d+\.\d+\.(\d+)$/.exec(version)?.[1] ?? null;
 }
 
+/** A plain explanation for the refusals that need a person in the web UI; null for anything else. */
+export function explainRefusal(error: string): string | null {
+  if (error.includes("APP_DATA_USAGES_REQUIRED")) {
+    return "Apple needs the app's privacy answers first, and they can only be given in the web UI: App Store Connect > the app > App Privacy > " +
+      "Get Started. For Ding choose \"No, we do not collect data from this app\", Save, then Publish. Everything else is already in place: " +
+      "run `make submit` afterwards.";
+  }
+  return null;
+}
+
 export type Readiness = "missing" | "processing" | "ready" | "unusable";
 
 /** Where a build stands: not visible yet (just uploaded), still processing, ready to attach, or beyond help. */
@@ -93,13 +103,20 @@ if (import.meta.main) {
   const items = (await asc(jwt, `/reviewSubmissions/${submissionId}/items`)).data as Json[];
   if (items.length === 0) {
     step("Adding the version to the submission…");
-    await asc(jwt, `/reviewSubmissionItems`, {
-      method: "POST",
-      body: JSON.stringify({ data: { type: "reviewSubmissionItems", relationships: {
-        reviewSubmission: { data: { type: "reviewSubmissions", id: submissionId } },
-        appStoreVersion: { data: { type: "appStoreVersions", id: target.id } },
-      } } }),
-    });
+    try {
+      await asc(jwt, `/reviewSubmissionItems`, {
+        method: "POST",
+        body: JSON.stringify({ data: { type: "reviewSubmissionItems", relationships: {
+          reviewSubmission: { data: { type: "reviewSubmissions", id: submissionId } },
+          appStoreVersion: { data: { type: "appStoreVersions", id: target.id } },
+        } } }),
+      });
+    } catch (e) {
+      const explanation = explainRefusal(String(e));
+      if (!explanation) throw e;
+      fail(explanation);
+      Deno.exit(1);
+    }
   }
   step("Submitting for review…");
   await asc(jwt, `/reviewSubmissions/${submissionId}`, { method: "PATCH", body: JSON.stringify({ data: { type: "reviewSubmissions", id: submissionId, attributes: { submitted: true } } }) });
