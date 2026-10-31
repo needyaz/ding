@@ -13,6 +13,10 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration 
 
 .DEFAULT_GOAL := help
 
+# Per-machine identity, gitignored (see make/local.*.mk.example and DISTRIBUTION.md). Defaults to a dev box.
+-include make/local.mk
+BOX_NAME ?= dev
+
 # ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
@@ -103,6 +107,16 @@ coverage: stop
 	  | awk '$$2 ~ /\.swift$$/ {n=split($$2, p, "/"); printf "  %-28s %8s %s\n", p[n], $$4, $$5}'
 	@xcrun xccov view --report --only-targets $(BUILD_DIR)/test.xcresult 2>/dev/null \
 	  | awk '$$2 == "Ding.app" || $$1 == "Ding.app" {printf "  %-28s %8s %s\n", "TOTAL", $$(NF-1), $$NF}'
+
+# ---------------------------------------------------------------------------
+# Release (build box only)
+# ---------------------------------------------------------------------------
+
+# The TestFlight targets touch the live App Store Connect API key, so they only exist as make rules on the box that
+# declares BOX_NAME := prod-build. On any other machine `make testflight` fails with "No rule to make target".
+ifeq ($(BOX_NAME),prod-build)
+-include make/store.mk
+endif
 
 # ---------------------------------------------------------------------------
 # Utilities

@@ -29,7 +29,7 @@ make test       # core tests, then app tests
 make coverage   # run everything and print line coverage
 ```
 
-There is no CI; run `make test` before you push. The app tests run inside Ding, which allows one instance, so `make test` quits a running Ding first (`make run` starts it again).
+Releases to TestFlight are built on a separate build box: see [DISTRIBUTION.md](DISTRIBUTION.md). There is no CI; run `make test` before you push. The app tests run inside Ding, which allows one instance, so `make test` quits a running Ding first (`make run` starts it again).
 
 ## Project layout
 

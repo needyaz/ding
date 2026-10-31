@@ -45,6 +45,9 @@ targets:
       path: Ding/Info.plist
       properties:
         CFBundleDisplayName: Ding
+        # Read from the build settings so a release can stamp the build number (the commit count).
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
         LSMultipleInstancesProhibited: true
         LSMinimumSystemVersion: "14.0"

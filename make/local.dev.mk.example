@@ -1,0 +1,4 @@
+# Dev box profile. Copy to make/local.mk on a dev machine:
+#   cp make/local.dev.mk.example make/local.mk
+# (make/local.mk is gitignored: one file per machine, never committed.)
+BOX_NAME := dev

@@ -18,7 +18,7 @@ struct SettingsView: View {
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
             AssistantsTab()
-                .tabItem { Label("Assistants", systemImage: "sparkles") }
+                .tabItem { Label("AI Access", systemImage: "sparkles") }
         }
         .frame(width: 480, height: 440)
         .scenePadding()

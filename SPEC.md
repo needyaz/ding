@@ -117,7 +117,7 @@ Two separate things, each with its own timing. (The code calls the second an "al
   which relays to the running app. Every install has it; nothing else to install.
 - Tools: **get_next_meeting**, **list_meetings** (`days` 1–14, `include_all_day`; at most 50, with a `truncated` flag) and **open_meeting** (an optional
   `id`; with none it opens the current or next meeting that has a link, the same one the "join next" hotkey picks).
-- **Off by default.** Preferences → Assistants has two switches, *Let AI assistants see my schedule* and *Let AI assistants open my meetings*, checked on every request, so
+- **Off by default.** Preferences → AI Access has two switches, *Let AI assistants see my schedule* and *Let AI assistants open my meetings*, checked on every request, so
   turning one off takes effect immediately. *Copy Entry* (Claude Desktop) and *Copy Command* (Claude Code) and *Copy Path* (any other MCP app) give the client the helper's real path. The Claude Desktop entry is the `"mcpServers"` piece without outer braces, because that config file normally holds other settings and a complete document pasted into it breaks it.
 - What a client can see per meeting: id, title, start and end (local time with its UTC offset), all-day, in progress, minutes until start, calendar name,
   the service name, whether it can be opened, tentative. Never notes, attendees, locations or meeting links: a link can carry a passcode. Inapplicable
@@ -126,7 +126,7 @@ Two separate things, each with its own timing. (The code calls the second an "al
   opening works without schedule access, and then the reply is only `{"opened": true}`. The meeting's details are included only if schedule access is also on.
 - Meeting titles are written by whoever sent the invitation, so the server's instructions and tool descriptions tell the model to treat them as untrusted.
 - Argument mistakes and refusals come back as tool errors written for the model ("The user hasn't allowed AI assistants to see their schedule. They can turn it
-  on in Ding → Preferences → Assistants."), not as protocol errors.
+  on in Ding → Preferences → AI Access."), not as protocol errors.
 - Ding must be running. If it isn't, the handshake and tool list still work and a tool call says "Ding isn't running".
 - Protocol: MCP over newline-delimited JSON-RPC 2.0; versions 2025-06-18, 2025-03-26 and 2024-11-05; tools only. Batches, notifications and pings are handled.
 - Transport: a Unix socket (owner-only) in the app group container, so the sandboxed helper and sandboxed app need no network entitlement. Ding checks the
@@ -195,6 +195,9 @@ Anything that touches the system sits behind a small protocol or closure so test
 ## Distribution & License
 
 - Free on the Mac App Store; notarized DMG and Homebrew cask possible later.
+- TestFlight builds are archived and uploaded from the build box only, with `make testflight`, gated by `make/local.mk` like the author's other apps
+  (see `DISTRIBUTION.md`). The build number is the git commit count; the marketing version is `MARKETING_VERSION` in `project.yml`. The app carries a
+  privacy manifest declaring its UserDefaults use.
 - License: GPLv3. The repo is public, but outside code contributions aren't accepted (see `CONTRIBUTING.md`). The author holds the copyright
   on all of it, which is what allows the App Store build despite the GPL; no CLA is needed. Issues are welcome.
 - Dependencies are MIT-licensed (KeyboardShortcuts, MenuBarExtraAccess), which is compatible with the GPLv3.

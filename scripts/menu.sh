@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 
 rows="$(
   awk '
-    function pri(c) { return c=="Run"?1 : c=="Build"?2 : c=="Tests"?3 : c=="Utilities"?4 : 5 }
+    function pri(c) { return c=="Run"?1 : c=="Build"?2 : c=="Tests"?3 : c=="Release"?4 : c=="Utilities"?5 : 6 }
     /^## \[/ {
       cat=$0; sub(/^## \[/, "", cat); sub(/\].*/, "", cat)
       desc=$0; sub(/^## \[[^]]*\] */, "", desc)
@@ -17,7 +17,7 @@ rows="$(
       name=t; sub(/:.*/, "", name)
       printf "%d\t%s\t%s\t%s\n", pri(cat), name, cat, desc
     }
-  ' Makefile \
+  ' Makefile $( [ -f make/store.mk ] && grep -q 'BOX_NAME := prod-build' make/local.mk 2>/dev/null && echo make/store.mk ) \
   | sort -k1,1n -s \
   | awk -F'\t' '{ printf "%s\t%-10s %-27s %s\n", $2, $3, $2, $4 }'
 )"

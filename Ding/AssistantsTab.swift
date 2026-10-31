@@ -13,7 +13,7 @@ enum ControlHelper {
     }
 }
 
-/// Preferences → Assistants: what an AI assistant (any MCP app) may do, and how to connect one.
+/// Preferences → AI Access: what an AI assistant (any MCP app) may do, and how to connect one.
 struct AssistantsTab: View {
     @AppStorage(Pref.controlReadSchedule) private var readSchedule = Pref.Default.controlReadSchedule
     @AppStorage(Pref.controlOpenMeetings) private var openMeetings = Pref.Default.controlOpenMeetings

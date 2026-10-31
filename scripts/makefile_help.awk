@@ -6,7 +6,7 @@
 #   awk -f makefile_help.awk $(MAKEFILE_LIST)
 
 BEGIN {
-  np = split("Run,Build,Tests,Utilities", pref, ",")
+  np = split("Run,Build,Tests,Release,Utilities", pref, ",")
 }
 
 function add(cat, name, desc) {

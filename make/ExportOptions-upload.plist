@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- destination=upload makes -exportArchive upload straight to App Store
+	     Connect (TestFlight) instead of writing a package to disk. -->
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>upload</string>
+	<key>teamID</key>
+	<string>46XLY7Y9P8</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>uploadSymbols</key>
+	<true/>
+	<!-- The build number is the git commit count, passed to xcodebuild at archive
+	     time; Xcode must NOT rewrite it, or it stops matching the commit. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>

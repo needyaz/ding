@@ -1,0 +1,8 @@
+# Build/prod box profile. Copy to make/local.mk on the build machine:
+#   cp make/local.prod.mk.example make/local.mk
+#
+# The build box is where the App Store Connect API key lives (ASC_KEY_ID /
+# ASC_ISSUER_ID / ASC_KEY_FILEPATH in ~/.zshenv, see DISTRIBUTION.md).
+# Declaring prod-build here is what makes the TestFlight targets in
+# make/store.mk exist as make rules at all.
+BOX_NAME := prod-build

@@ -90,9 +90,9 @@ public enum ControlFailure: Error, Equatable, Sendable {
     public var message: String {
         switch self {
         case .scheduleAccessOff:
-            "The user hasn't allowed AI assistants to see their schedule. They can turn it on in Ding → Preferences → Assistants."
+            "The user hasn't allowed AI assistants to see their schedule. They can turn it on in Ding → Preferences → AI Access."
         case .openingOff:
-            "The user hasn't allowed AI assistants to open meetings. They can turn it on in Ding → Preferences → Assistants."
+            "The user hasn't allowed AI assistants to open meetings. They can turn it on in Ding → Preferences → AI Access."
         case .noCalendarAccess:
             "Ding doesn't have access to the user's calendar, so there's nothing to show. Ding needs calendar access in System Settings → Privacy & Security."
         case .meetingNotFound(let id):
