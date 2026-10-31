@@ -27,4 +27,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return }
         Task { @MainActor in AppModel.shared.start() }
     }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Leave no stale socket behind for the helper to mistake for a running app.
+        MainActor.assumeIsolated { AppModel.shared.stopControlServer() }
+    }
 }

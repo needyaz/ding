@@ -23,6 +23,8 @@ enum Pref {
     static let alertMode = "alertMode"
     static let alertLeadMinutes = "alertLeadMinutes"
     static let alertIncludeAll = "alertIncludeAll"
+    static let controlReadSchedule = "controlReadSchedule"
+    static let controlOpenMeetings = "controlOpenMeetings"
 
     /// How links for `service` open: "native", "default", or a browser's bundle ID.
     static func openKey(_ service: MeetingService) -> String { "open.\(service.rawValue)" }
@@ -44,6 +46,9 @@ enum Pref {
         /// Early enough to join without being late, and clear of the 5-minute notification.
         static let alertLeadMinutes = 1
         static let alertIncludeAll = false
+        /// An assistant can do nothing until the user turns it on.
+        static let controlReadSchedule = false
+        static let controlOpenMeetings = false
     }
 
     /// Choices offered in Preferences.
@@ -67,6 +72,8 @@ enum Pref {
             alertMode: Default.alertMode.rawValue,
             alertLeadMinutes: Default.alertLeadMinutes,
             alertIncludeAll: Default.alertIncludeAll,
+            controlReadSchedule: Default.controlReadSchedule,
+            controlOpenMeetings: Default.controlOpenMeetings,
         ]
         for service in MeetingService.allCases {
             values[openKey(service)] = OpenTarget.defaultValue(for: service)
@@ -109,6 +116,13 @@ enum Pref {
             mode: AlertMode(rawValue: defaults.string(forKey: alertMode) ?? "") ?? .off,
             alertLeadMinutes: defaults.integer(forKey: alertLeadMinutes),
             includeEventsWithoutLink: defaults.bool(forKey: alertIncludeAll)
+        )
+    }
+
+    static var controlPermissions: ControlPermissions {
+        ControlPermissions(
+            canReadSchedule: defaults.bool(forKey: controlReadSchedule),
+            canOpenMeetings: defaults.bool(forKey: controlOpenMeetings)
         )
     }
 

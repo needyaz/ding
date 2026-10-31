@@ -25,7 +25,9 @@ class IsolatedDefaultsTestCase: XCTestCase {
 extension AppModel {
     /// A model wired to fakes: no EventKit, no notification center.
     static func test(calendar: CalendarSource? = nil, notifier: NotificationScheduling? = nil) -> AppModel {
-        AppModel(calendar: calendar ?? FakeCalendar(), notifier: notifier ?? FakeNotifier())
+        let model = AppModel(calendar: calendar ?? FakeCalendar(), notifier: notifier ?? FakeNotifier())
+        model.startsControlServer = false  // the socket belongs to the real app
+        return model
     }
 }
 

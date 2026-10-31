@@ -28,6 +28,9 @@ final class AppModel {
     @ObservationIgnored private let scheduler: Scheduler
     @ObservationIgnored private var started = false
     @ObservationIgnored private var preferencesTask: Task<Void, Never>?
+    @ObservationIgnored private var controlListener: ControlListener?
+    /// Off in tests: the socket is shared with the running app, so a test must never take it over.
+    @ObservationIgnored var startsControlServer = true
 
     // Side effects, replaceable so tests never open browsers, windows or alerts.
     @ObservationIgnored var openLink: (MeetingLink) -> Void = { LinkOpener.open($0) }
@@ -77,11 +80,27 @@ final class AppModel {
 
         observeSystem()
         registerHotkeys()
+        if startsControlServer { startControlServer() }
 
         Task {
             if calendar.access == .notDetermined { await calendar.requestAccess() }
             reload()
         }
+    }
+
+    private func startControlServer() {
+        let service = ControlService(environment: .init(
+            events: { [weak self] in self?.visibleEvents ?? [] },
+            access: { [weak self] in self?.access ?? .notDetermined },
+            permissions: { Pref.controlPermissions },
+            join: { [weak self] in self?.join($0) }
+        ))
+        controlListener = ControlListener(service: service)
+        controlListener?.start()
+    }
+
+    func stopControlServer() {
+        controlListener?.stop()
     }
 
     private func registerHotkeys() {

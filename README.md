@@ -12,6 +12,7 @@ Ding reads the calendars already set up on your Mac (iCloud, Google, Exchange) t
 - Choose which app or browser opens each service
 - Notification before meetings, with an optional edge flash or full-screen reminder
 - Global hotkeys
+- Optional AI assistant integration (MCP): let Claude, or any app that supports MCP, check your next meeting or open it. Off until you turn it on
 
 ## Requirements
 
@@ -28,13 +29,15 @@ make test       # core tests, then app tests
 make coverage   # run everything and print line coverage
 ```
 
-There is no CI; run `make test` before you push.
+There is no CI; run `make test` before you push. The app tests run inside Ding, which allows one instance, so `make test` quits a running Ding first (`make run` starts it again).
 
 ## Project layout
 
 | Path | What's there |
 |---|---|
-| `Sources/DingCore` | UI-free logic: link detection, opener routing, grouping, countdowns, alert planning. Tested with `swift test`. |
+| `Sources/DingCore` | UI-free logic: link detection, opener routing, grouping, countdowns, alert planning, what an assistant may see. Tested with `swift test`. |
+| `Sources/DingIPC`, `Sources/DingMCP` | The socket between the app and its helper, and the MCP server. Also tested with `swift test`. |
+| `DingMCPHelper/` | `ding-mcp`, the small program that exposes the MCP server over stdio. Embedded in the app. |
 | `Ding/` | The macOS app: EventKit, timers, notifications, alert windows, SwiftUI views. |
 | `DingTests/` | App tests, hosted inside the app. |
 | `design/` | Icon source art and `make_icon.py`, which builds the asset catalog's icon set. |

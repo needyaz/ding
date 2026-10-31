@@ -89,6 +89,20 @@ final class PreferencesTests: IsolatedDefaultsTestCase {
         XCTAssertTrue(Pref.alertLeadOptions.contains(Pref.Default.alertLeadMinutes))
     }
 
+    func testAssistantAccessIsOffUntilTheUserTurnsItOn() {
+        XCTAssertEqual(Pref.controlPermissions, ControlPermissions(canReadSchedule: false, canOpenMeetings: false))
+        XCTAssertFalse(suite.bool(forKey: Pref.controlReadSchedule))
+        XCTAssertFalse(suite.bool(forKey: Pref.controlOpenMeetings))
+    }
+
+    func testAssistantPermissionsAreReadLiveAndIndependently() {
+        suite.set(true, forKey: Pref.controlReadSchedule)
+        XCTAssertEqual(Pref.controlPermissions, ControlPermissions(canReadSchedule: true, canOpenMeetings: false))
+        suite.set(true, forKey: Pref.controlOpenMeetings)
+        suite.set(false, forKey: Pref.controlReadSchedule)
+        XCTAssertEqual(Pref.controlPermissions, ControlPermissions(canReadSchedule: false, canOpenMeetings: true))
+    }
+
     func testUnknownAlertModeFallsBackToOff() {
         suite.set("confetti", forKey: Pref.alertMode)
         XCTAssertEqual(Pref.alertSettings.mode, .off)

@@ -17,6 +17,8 @@ struct SettingsView: View {
                 .tabItem { Label("Notifications", systemImage: "bell") }
             ShortcutsTab()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            AssistantsTab()
+                .tabItem { Label("Assistants", systemImage: "sparkles") }
         }
         .frame(width: 480, height: 440)
         .scenePadding()

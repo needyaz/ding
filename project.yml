@@ -30,23 +30,36 @@ targets:
       - Ding
     dependencies:
       - package: DingCore
+      - package: DingCore
+        product: DingIPC
       - package: KeyboardShortcuts
       - package: MenuBarExtraAccess
+      # The MCP helper ships inside the app bundle, so every install has it.
+      - target: ding-mcp
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
     info:
       path: Ding/Info.plist
       properties:
         CFBundleDisplayName: Ding
         LSUIElement: true
+        LSMultipleInstancesProhibited: true
         LSMinimumSystemVersion: "14.0"
         LSApplicationCategoryType: public.app-category.productivity
         NSCalendarsFullAccessUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.
         NSCalendarsUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.
         ITSAppUsesNonExemptEncryption: false
+        DingAppGroup: $(TeamIdentifierPrefix)blue.luci.Ding
     entitlements:
       path: Ding/Ding.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
+        com.apple.security.application-groups:
+          - $(TeamIdentifierPrefix)blue.luci.Ding
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: blue.luci.Ding
@@ -68,3 +81,34 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: blue.luci.DingTests
+  ding-mcp:
+    type: tool
+    platform: macOS
+    sources:
+      - DingMCPHelper
+    dependencies:
+      - package: DingCore
+        product: DingIPC
+      - package: DingCore
+        product: DingMCP
+    info:
+      path: DingMCPHelper/Info.plist
+      properties:
+        CFBundleName: ding-mcp
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSMinimumSystemVersion: "14.0"
+        DingAppGroup: $(TeamIdentifierPrefix)blue.luci.Ding
+    entitlements:
+      path: DingMCPHelper/DingMCP.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - $(TeamIdentifierPrefix)blue.luci.Ding
+    settings:
+      base:
+        PRODUCT_NAME: ding-mcp
+        PRODUCT_BUNDLE_IDENTIFIER: blue.luci.Ding.mcp
+        GENERATE_INFOPLIST_FILE: NO
+        CREATE_INFOPLIST_SECTION_IN_BINARY: YES
+        SKIP_INSTALL: YES

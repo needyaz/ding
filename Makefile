@@ -28,6 +28,16 @@ run: build stop
 stop:
 	-@pkill -x $(APP_NAME) && echo "Stopped $(APP_NAME)" || true
 
+.PHONY: mcp-smoke
+## [Run] Smoke-test the bundled MCP helper: handshake and tool list (Ding need not be running)
+mcp-smoke: build
+	@printf '%s\n' \
+	  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}' \
+	  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+	  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+	  | $(APP_PATH)/Contents/Helpers/ding-mcp \
+	  | python3 -c 'import sys, json; r = [json.loads(l) for l in sys.stdin]; i = r[0]["result"]; print("server:", i["serverInfo"]["name"], i["serverInfo"]["version"], "· protocol", i["protocolVersion"]); print("tools: ", ", ".join(t["name"] for t in r[1]["result"]["tools"]))'
+
 .PHONY: logs
 ## [Run] Stream Ding's logs (Ctrl-C to stop)
 logs:
@@ -74,8 +84,8 @@ test-core:
 	swift test
 
 .PHONY: test-app
-## [Tests] App-layer tests hosted in Ding (preferences, EventKit mapping, model, timers, views)
-test-app: generate
+## [Tests] App-layer tests hosted in Ding (quits a running Ding first: it allows one instance)
+test-app: generate stop
 	@rm -rf $(BUILD_DIR)/test.xcresult
 	$(XCODEBUILD) -quiet test -destination 'platform=macOS' -enableCodeCoverage YES -resultBundlePath $(BUILD_DIR)/test.xcresult
 
