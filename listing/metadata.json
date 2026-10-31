@@ -3,6 +3,7 @@
     "en-US": {
       "name": "Ding: Meeting Countdown",
       "subtitle": "Your next meeting, one click",
+      "privacyPolicyUrl": "https://luci.blue/privacy/ding.html",
       "supportUrl": "https://luci.blue/ding",
       "marketingUrl": "https://luci.blue/ding",
       "promotionalText": "Your next meeting, counted down in the menu bar and one click away. Private by design: no account, no network, no ads.",
