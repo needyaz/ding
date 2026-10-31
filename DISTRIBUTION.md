@@ -40,7 +40,7 @@ On the build box, `make release` does everything, in this order (as Mylo's `rele
    the editable version carry exactly `VERSION` (renaming one made by hand, or creating one) (default `1.0.<commit count>`, what step 1 just stamped, so keep new commits out in between).
 4. **`screenshots-apply`:** the screenshots from `listing/screenshots/`. The locale has to exist first, which step 3 ensures.
 
-5. **`submit`:** attaches the build to the version and sends it to App Review. It is also a target on its own (`DRY=1` previews).
+5. **`submit`:** waits for Apple to finish processing the build (a few minutes after the upload), attaches it to the version and sends it to App Review. It is also a target on its own (`DRY=1` previews).
 
 Each step is also a target on its own, and every write target has a read-only twin:
 

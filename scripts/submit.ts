@@ -6,7 +6,7 @@
  *
  * The build number is the last part of the version (1.0.77 is build 77): `make testflight` stamps both from the commit
  * count. The version's text, screenshots and review information must already be applied (`make listing-apply`,
- * `make screenshots-apply`), and the build must have finished processing.
+ * `make screenshots-apply`), and `submit` waits for the build to finish processing (up to `--wait-minutes`, default 45).
  */
 
 import { asc, ascJwt, EDITABLE_STATES, fail, findApp, type Json, macVersions, PLATFORM, pass, step } from "./lib/asc.ts";
@@ -15,6 +15,15 @@ const SUBMITTED_STATES = new Set(["WAITING_FOR_REVIEW", "IN_REVIEW"]);
 
 export function buildNumberFromVersion(version: string): string | null {
   return /^\d+\.\d+\.(\d+)$/.exec(version)?.[1] ?? null;
+}
+
+export type Readiness = "missing" | "processing" | "ready" | "unusable";
+
+/** Where a build stands: not visible yet (just uploaded), still processing, ready to attach, or beyond help. */
+export function readiness(build: { processingState: string; expired: boolean } | undefined): Readiness {
+  if (!build) return "missing";
+  if (build.expired || ["FAILED", "INVALID"].includes(build.processingState)) return "unusable";
+  return build.processingState === "VALID" ? "ready" : "processing";
 }
 
 export type Action = "already-submitted" | "approved-or-live" | "submit";
@@ -46,14 +55,25 @@ if (import.meta.main) {
   if (action === "already-submitted") { pass(`${version} is already ${target.state}.`); Deno.exit(0); }
   if (action === "approved-or-live") { fail(`${version} is ${target.state}; nothing to submit.`); Deno.exit(1); }
 
-  step(`Finding build ${buildNumber}…`);
-  const builds = await asc(jwt, `/builds?filter[app]=${appId}&filter[version]=${buildNumber}&filter[preReleaseVersion.platform]=${PLATFORM}&fields[builds]=version,processingState,expired&limit=1`);
-  const build = builds.data[0];
-  if (!build) { fail(`Build ${buildNumber} is not on App Store Connect. Run make testflight.`); Deno.exit(1); }
-  if (build.attributes.expired || build.attributes.processingState !== "VALID") {
-    fail(`Build ${buildNumber} is ${build.attributes.expired ? "expired" : build.attributes.processingState}; wait for it to finish processing.`);
-    Deno.exit(1);
+  // A build uploaded a moment ago isn't listed until Apple has started processing it, and can't be attached until it
+  // finishes, which takes several minutes. Wait for it (the upload step already succeeded), up to --wait-minutes.
+  step(`Waiting for build ${buildNumber} to finish processing…`);
+  const waitMinutes = Number(args[args.indexOf("--wait-minutes") + 1]) || 45;
+  const deadline = Date.now() + waitMinutes * 60_000;
+  let build: Json | undefined;
+  let last = "";
+  while (true) {
+    const builds = await asc(jwt, `/builds?filter[app]=${appId}&filter[version]=${buildNumber}&filter[preReleaseVersion.platform]=${PLATFORM}&fields[builds]=version,processingState,expired&limit=1`);
+    build = builds.data[0];
+    const state = readiness(build ? { processingState: build.attributes.processingState, expired: !!build.attributes.expired } : undefined);
+    if (state === "ready") break;
+    if (dry) { pass(`dry run: build ${buildNumber} is ${state}; once ready it would be attached to ${version} and submitted.`); Deno.exit(0); }
+    if (state === "unusable") { fail(`Build ${buildNumber} is ${build.attributes.expired ? "expired" : build.attributes.processingState} and can't be submitted. Make a new commit and release again.`); Deno.exit(1); }
+    if (Date.now() > deadline) { fail(`Build ${buildNumber} still isn't ready after ${waitMinutes} minutes (${state}). Re-run make submit later.`); Deno.exit(1); }
+    if (state !== last) { console.log(`  ${state === "missing" ? "not listed by Apple yet" : "processing"}…`); last = state; }
+    await new Promise((resolve) => setTimeout(resolve, 30_000));
   }
+  pass(`build ${buildNumber} is processed.`);
 
   if (dry) { pass(`dry run: would attach build ${buildNumber} to ${version} and submit it for review.`); Deno.exit(0); }
 

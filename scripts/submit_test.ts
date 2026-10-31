@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { actionFor, buildNumberFromVersion } from "./submit.ts";
+import { actionFor, buildNumberFromVersion, readiness } from "./submit.ts";
 
 Deno.test("the build number is the last part of 1.0.<n>", () => {
   assertEquals(buildNumberFromVersion("1.0.77"), "77");
@@ -13,4 +13,12 @@ Deno.test("only an editable version is submitted; a waiting one is left alone", 
   assertEquals(actionFor("WAITING_FOR_REVIEW"), "already-submitted");
   assertEquals(actionFor("IN_REVIEW"), "already-submitted");
   assertEquals(actionFor("READY_FOR_SALE"), "approved-or-live");
+});
+
+Deno.test("a just-uploaded build is missing, then processing, then ready", () => {
+  assertEquals(readiness(undefined), "missing");
+  assertEquals(readiness({ processingState: "PROCESSING", expired: false }), "processing");
+  assertEquals(readiness({ processingState: "VALID", expired: false }), "ready");
+  assertEquals(readiness({ processingState: "FAILED", expired: false }), "unusable");
+  assertEquals(readiness({ processingState: "VALID", expired: true }), "unusable");
 });
