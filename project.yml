@@ -1,0 +1,70 @@
+name: Ding
+options:
+  bundleIdPrefix: blue.luci
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 46XLY7Y9P8
+packages:
+  DingCore:
+    path: .
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 3.0.0
+  MenuBarExtraAccess:
+    url: https://github.com/orchetect/MenuBarExtraAccess
+    from: 1.2.0
+targets:
+  Ding:
+    type: application
+    platform: macOS
+    sources:
+      - Ding
+    dependencies:
+      - package: DingCore
+      - package: KeyboardShortcuts
+      - package: MenuBarExtraAccess
+    info:
+      path: Ding/Info.plist
+      properties:
+        CFBundleDisplayName: Ding
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+        LSApplicationCategoryType: public.app-category.productivity
+        NSCalendarsFullAccessUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.
+        NSCalendarsUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar never leaves this Mac.
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: Ding/Ding.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: blue.luci.Ding
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO
+    scheme:
+      testTargets:
+        - DingTests
+      gatherCoverageData: true
+  DingTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - DingTests
+    dependencies:
+      - target: Ding
+      - package: DingCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: blue.luci.DingTests
