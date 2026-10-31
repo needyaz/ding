@@ -180,9 +180,9 @@ Anything that touches the system sits behind a small protocol or closure so test
 - `project.yml` (XcodeGen) generates `Ding.xcodeproj`, which isn't checked in.
 - A `Makefile` with the same conventions as the author's other projects: `make` lists targets, `make menu` is an fzf picker, `make run` builds and launches, `make test`, `make coverage`, `make mcp-smoke` (handshake and tool list through the bundled helper). The app tests run inside Ding, which allows only one instance, so `make test-app` quits a running Ding first.
 - The App Store listing is declared in `listing/`: `metadata.json` (text, URLs, copyright, release type, App Review notes), `app.json` (category,
-  age rating, content rights, price, availability) and `screenshots/`. On the build box `make release` uploads to TestFlight and applies all of it through the
-  App Store Connect API with read-back (`store-setup-`, `listing-` and `screenshots-` `dump`/`diff`/`apply` targets, as in Mylo); `make submit` is the separate
-  step that sends the version to App Review, and `make beta` promotes a build to the public TestFlight beta. The App Review contact comes from the build box's
+  age rating, content rights, price, availability) and `screenshots/`. On the build box `make release` uploads to TestFlight, applies all of it through the
+  App Store Connect API with read-back (`store-setup-`, `listing-` and `screenshots-` `dump`/`diff`/`apply` targets, as in Mylo) and submits the version to
+  App Review (`make submit`, also usable alone); `make beta` promotes a build to the public TestFlight beta. The App Review contact comes from the build box's
   environment, never the repo. The release version is `1.0.<commit count>`. `make test-listing` tests the Deno tools offline.
 - `make screenshots` renders the App Store screenshots from the real views with fixture data (debug builds only; see `listing/README.md`).
 - `design/make_icon.py` builds the app icon set from the source art in `design/`. The menu bar glyph is drawn in code (`MenuBarGlyph`).

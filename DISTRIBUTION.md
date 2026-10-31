@@ -31,7 +31,7 @@ The marketing version is `1.0.<build number>`, stamped at archive time like Mylo
 
 ## One command: `make release`
 
-On the build box, `make release` does everything up to App Review, in this order (as Mylo's `release-ios`):
+On the build box, `make release` does everything, in this order (as Mylo's `release-ios`):
 
 1. **`testflight`:** preflight, `pull`, then the duplicate-build check (`scripts/asc_build_check.ts`: a build already on App Store
    Connect is reused, a burned number stops the run, anything unknown builds as usual), archive and upload.
@@ -40,8 +40,7 @@ On the build box, `make release` does everything up to App Review, in this order
    the editable version as `VERSION` (default `1.0.<commit count>`, what step 1 just stamped, so keep new commits out in between).
 4. **`screenshots-apply`:** the screenshots from `listing/screenshots/`. The locale has to exist first, which step 3 ensures.
 
-Then **`make submit`** attaches the build to the version and sends it to App Review (`DRY=1` previews). It is separate because it is the
-one step that can't be taken back.
+5. **`submit`:** attaches the build to the version and sends it to App Review. It is also a target on its own (`DRY=1` previews).
 
 Each step is also a target on its own, and every write target has a read-only twin:
 

@@ -124,10 +124,10 @@ _testflight:
 beta: _preflight-listing
 	deno run --allow-net --allow-env --allow-read scripts/asc_promote_beta.ts $$(git rev-list --count HEAD)
 
-# One command, as Mylo's release-ios: build and upload, then everything the store needs, in this order. It stops short
-# of App Review: `make submit` is the one step that sends the version to Apple.
+# One command, as Mylo's release-ios: build and upload, then everything the store needs, then submit for review, in
+# this order. Each step is also its own target.
 .PHONY: release
-## [Release] Full release: TestFlight upload, app settings, listing, screenshots (then `make submit`)
+## [Release] Full release: TestFlight upload, app settings, listing, screenshots, submit for App Review
 release:
 	@$(MAKE) --no-print-directory _preflight
 	@$(MAKE) --no-print-directory pull
@@ -135,10 +135,11 @@ release:
 	@$(MAKE) --no-print-directory store-setup-apply
 	@$(MAKE) --no-print-directory listing-apply
 	@$(MAKE) --no-print-directory screenshots-apply
-	@echo "✓ release $(VERSION) is on App Store Connect with its listing; run 'make submit' to send it to App Review"
+	@$(MAKE) --no-print-directory submit
+	@echo "✓ release $(VERSION) built, uploaded, listed and submitted for App Review"
 
 .PHONY: submit
-## [Release] Attach the build to version VERSION and submit it to App Review (DRY=1 to preview)
+## [Release] Attach the build to version VERSION and submit it to App Review (also the last step of `release`; DRY=1 to preview)
 submit: _preflight-listing
 	deno run --allow-net --allow-env --allow-read scripts/submit.ts --version $(VERSION) $(if $(DRY),--dry-run)
 
