@@ -4,12 +4,15 @@
 # directly above it; `help` and `menu` both read those lines.
 
 APP_NAME  := Ding
-BUNDLE_ID := blue.luci.Ding
+BUNDLE_ID ?= blue.luci.Ding
+# Your Apple developer team ID, for building a copy under your own identity (see README). Empty keeps the project's.
+TEAM ?=
 PROJECT   := $(APP_NAME).xcodeproj
 BUILD_DIR := build
 APP_PATH  := $(BUILD_DIR)/Build/Products/Debug/$(APP_NAME).app
 
-XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration Debug -derivedDataPath $(BUILD_DIR) -allowProvisioningUpdates
+XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration Debug -derivedDataPath $(BUILD_DIR) -allowProvisioningUpdates \
+  DING_BUNDLE_ID=$(BUNDLE_ID) $(if $(TEAM),DEVELOPMENT_TEAM=$(TEAM))
 
 .DEFAULT_GOAL := help
 

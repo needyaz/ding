@@ -83,10 +83,15 @@ final class DingIPCRulesTests: XCTestCase {
     }
 
     func testRequirementPinsTheTeamAndTheHelper() {
-        let requirement = DingIPC.codeSigningRequirement(teamID: "46XLY7Y9P8")
+        let requirement = DingIPC.codeSigningRequirement(teamID: "46XLY7Y9P8", helperIdentifier: DingIPC.helperIdentifier(forApp: "blue.luci.Ding"))
         XCTAssertTrue(requirement.contains("anchor apple generic"))
         XCTAssertTrue(requirement.contains(#"certificate leaf[subject.OU] = "46XLY7Y9P8""#))
         XCTAssertTrue(requirement.contains(#"identifier "blue.luci.Ding.mcp""#), "a sibling app of the same team is not let in")
+    }
+
+    func testTheHelperIdentifierFollowsTheAppsBundleID() {
+        XCTAssertEqual(DingIPC.helperIdentifier(forApp: "blue.luci.Ding"), "blue.luci.Ding.mcp")
+        XCTAssertEqual(DingIPC.helperIdentifier(forApp: "com.example.MyDing"), "com.example.MyDing.mcp")
     }
 
     func testSocketPathIsShortEnoughForAUnixSocket() throws {

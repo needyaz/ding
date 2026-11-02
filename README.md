@@ -20,14 +20,32 @@ macOS 14 Sonoma or later.
 
 ## Building
 
-Requires Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+Requires Xcode 26, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), and, for `make test`, [Deno](https://deno.com) (`brew install deno`), which runs the App Store listing tool tests.
 
 ```sh
 make menu       # pick a target (or `make` to list them)
 make run        # build and launch; look for the bell in the menu bar
-make test       # core tests, then app tests
+make test       # core tests, app tests, then the listing tool tests
 make coverage   # run everything and print line coverage
 ```
+
+### Building your own copy
+
+The project is signed with the author's team and bundle ID, which only the author can build under. To build a copy, use your own, from an Apple
+developer account that is signed in to Xcode (Settings > Accounts), so automatic signing can create the app ID and the app group Ding and its
+helper share:
+
+```sh
+make run TEAM=ABCDE12345 BUNDLE_ID=com.example.MyDing
+```
+
+`TEAM` is your 10-character team ID and `BUNDLE_ID` is any ID you own. Everything else derives from them: the helper is `<BUNDLE_ID>.mcp`, the app
+group is `<TEAM>.<BUNDLE_ID>`, and Ding only talks to a helper with that identifier signed by your team. Give the same `TEAM` and `BUNDLE_ID` to
+every `make` target you use (or set them in `make/local.mk`, which is gitignored). The first launch asks for Calendar access. The Mac App Store
+build and release tooling in `DISTRIBUTION.md` are the author's and not needed to run Ding.
+
+To use the optional AI assistant integration, open Preferences > AI Access: it shows the helper's path and the text to paste into Claude
+Desktop or Claude Code, and Ding must be running for an assistant to reach it.
 
 Releases to TestFlight are built on a separate build box: see [DISTRIBUTION.md](DISTRIBUTION.md). There is no CI; run `make test` before you push. The app tests run inside Ding, which allows one instance, so `make test` quits a running Ding first (`make run` starts it again).
 

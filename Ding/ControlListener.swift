@@ -10,8 +10,10 @@ final class ControlListener {
     convenience init?(service: ControlService, bundle: Bundle = .main) {
         guard let group = bundle.object(forInfoDictionaryKey: DingIPC.appGroupInfoKey) as? String,
               let team = DingIPC.teamID(fromAppGroup: group),
+              let appID = bundle.bundleIdentifier,
               let url = DingIPC.socketURL(appGroup: group) else { return nil }
-        self.init(service: service, path: url.path, requirement: DingIPC.codeSigningRequirement(teamID: team))
+        let helper = DingIPC.helperIdentifier(forApp: appID)
+        self.init(service: service, path: url.path, requirement: DingIPC.codeSigningRequirement(teamID: team, helperIdentifier: helper))
     }
 
     init(service: ControlService, path: String, requirement: String?) {

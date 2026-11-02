@@ -13,6 +13,8 @@ settings:
     ENABLE_HARDENED_RUNTIME: YES
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: 46XLY7Y9P8
+    # The one name the bundle IDs and the app group derive from. A copy of Ding overrides it (and the team): see README.
+    DING_BUNDLE_ID: blue.luci.Ding
 # Third-party packages are pinned to the exact versions that were reviewed; bump them on purpose.
 packages:
   DingCore:
@@ -56,17 +58,17 @@ targets:
         NSCalendarsFullAccessUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar stays on this Mac unless you let an AI assistant see it.
         NSCalendarsUsageDescription: Ding reads your calendar to show your next meeting and let you join it in one click. Your calendar stays on this Mac unless you let an AI assistant see it.
         ITSAppUsesNonExemptEncryption: false
-        DingAppGroup: $(TeamIdentifierPrefix)blue.luci.Ding
+        DingAppGroup: $(TeamIdentifierPrefix)$(DING_BUNDLE_ID)
     entitlements:
       path: Ding/Ding.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
         com.apple.security.application-groups:
-          - $(TeamIdentifierPrefix)blue.luci.Ding
+          - $(TeamIdentifierPrefix)$(DING_BUNDLE_ID)
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: blue.luci.Ding
+        PRODUCT_BUNDLE_IDENTIFIER: $(DING_BUNDLE_ID)
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
     scheme:
@@ -84,7 +86,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: blue.luci.DingTests
+        PRODUCT_BUNDLE_IDENTIFIER: $(DING_BUNDLE_ID)Tests
   ding-mcp:
     type: tool
     platform: macOS
@@ -102,17 +104,17 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSMinimumSystemVersion: "14.0"
-        DingAppGroup: $(TeamIdentifierPrefix)blue.luci.Ding
+        DingAppGroup: $(TeamIdentifierPrefix)$(DING_BUNDLE_ID)
     entitlements:
       path: DingMCPHelper/DingMCP.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
-          - $(TeamIdentifierPrefix)blue.luci.Ding
+          - $(TeamIdentifierPrefix)$(DING_BUNDLE_ID)
     settings:
       base:
         PRODUCT_NAME: ding-mcp
-        PRODUCT_BUNDLE_IDENTIFIER: blue.luci.Ding.mcp
+        PRODUCT_BUNDLE_IDENTIFIER: $(DING_BUNDLE_ID).mcp
         GENERATE_INFOPLIST_FILE: NO
         CREATE_INFOPLIST_SECTION_IN_BINARY: YES
         SKIP_INSTALL: YES

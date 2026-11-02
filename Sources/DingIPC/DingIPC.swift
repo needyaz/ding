@@ -11,12 +11,13 @@ public enum DingIPC {
         return team.flatMap { $0.isEmpty ? nil : $0 }
     }
 
-    /// The code signing identifier of the bundled helper, the only program that has a reason to connect.
-    public static let helperIdentifier = "blue.luci.Ding.mcp"
+    /// The code signing identifier of the bundled helper, the only program that has a reason to connect: the app's
+    /// own bundle ID plus ".mcp", so a copy built under another ID still works.
+    public static func helperIdentifier(forApp bundleID: String) -> String { bundleID + ".mcp" }
 
     /// Only the helper, signed by the same team, may talk to Ding: another app of the same developer can't.
     /// Works for development, Developer ID and App Store signing.
-    public static func codeSigningRequirement(teamID: String) -> String {
+    public static func codeSigningRequirement(teamID: String, helperIdentifier: String) -> String {
         #"anchor apple generic and certificate leaf[subject.OU] = "\#(teamID)" and identifier "\#(helperIdentifier)""#
     }
 

@@ -21,7 +21,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>DingAppGroup</key>
-	<string>$(TeamIdentifierPrefix)blue.luci.Ding</string>
+	<string>$(TeamIdentifierPrefix)$(DING_BUNDLE_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationCategoryType</key>
