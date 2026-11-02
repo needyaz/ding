@@ -186,6 +186,8 @@ Anything that touches the system sits behind a small protocol or closure so test
   environment, never the repo. The release version is `1.0.<commit count>`. `make test-listing` tests the Deno tools offline.
 - The app identity is one build setting, `DING_BUNDLE_ID` (with `DEVELOPMENT_TEAM`): the bundle IDs, the app group and the helper identifier Ding accepts all derive
   from it, and `make TEAM=… BUNDLE_ID=…` overrides them so anyone can build a copy under their own identity.
+- `make github-release` (build box only) builds a Developer ID-signed, notarized Ding and attaches it to the GitHub Release `v<VERSION>`; it is separate from `make release`,
+  the binary is never committed, and that build has no updater.
 - `make screenshots` renders the App Store screenshots from the real views with fixture data (debug builds only; see `listing/README.md`).
 - `design/make_icon.py` builds the app icon set from the source art in `design/`. The menu bar glyph is drawn in code (`MenuBarGlyph`).
 

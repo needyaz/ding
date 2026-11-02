@@ -60,6 +60,18 @@ make beta                # promote the build to the public TestFlight beta; re-r
   it is missing, `submit` stops with that instruction; answer it and run `make submit`.
 - This tooling has been tested offline only, so on the first run use the read-only `-diff` targets before the `-apply` ones.
 
+## Downloads outside the App Store: `make github-release`
+
+On the build box, `make github-release` builds a **Developer ID-signed, notarized** Ding and attaches it to the GitHub Release `v1.0.<commit count>`
+(`scripts/direct_release.sh`): archive, export with `make/ExportOptions-developer-id.plist`, `notarytool submit --wait` with the API key, staple,
+a Gatekeeper check, then `gh release create` (or an upload over an existing release for that tag). It is not part of `make release`, and the
+binary is never committed to the repo.
+
+- It needs a **Developer ID Application** certificate (cloud signing with the API key should create it) and `gh` signed in on the box.
+- This build has no updater (Ding has no network access), so the release notes say the Mac App Store version is the one that updates.
+- Developer ID builds with an app group may need their own provisioning profile; if the export complains, the error names it.
+- Untested until the first run on the build box.
+
 ## One-time setup
 
 ### App Store Connect

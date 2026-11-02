@@ -18,6 +18,8 @@ Ding reads the calendars already set up on your Mac (iCloud, Google, Exchange) t
 
 macOS 14 Sonoma or later.
 
+Ding is on the Mac App Store, which keeps it up to date. Notarized builds for download are attached to the [GitHub Releases](../../releases); those don't update themselves.
+
 ## Building
 
 Requires Xcode 26, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), and, for `make test`, [Deno](https://deno.com) (`brew install deno`), which runs the App Store listing tool tests.

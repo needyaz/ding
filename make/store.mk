@@ -120,6 +120,17 @@ _testflight:
 	   *)      $(MAKE) --no-print-directory _build-upload;; \
 	 esac
 
+# A notarized build for download outside the Mac App Store, attached to a GitHub Release for the tag v<VERSION>.
+# Not part of `release`: it's a second distribution channel. Needs a Developer ID certificate (cloud signing with the
+# API key should create it) and the `gh` CLI signed in on the build box.
+.PHONY: github-release
+## [Release] Build a Developer ID-signed, notarized Ding and attach it to a GitHub Release (v1.0.<commit count>)
+github-release:
+	@$(MAKE) --no-print-directory _preflight RELEASE_TOOLS="git xcodebuild xcodegen gh"
+	@$(MAKE) --no-print-directory pull
+	@$(MAKE) --no-print-directory generate
+	VERSION=$(VERSION) BUILD=$$(git rev-list --count HEAD) BUNDLE_ID=$(BUNDLE_ID) ./scripts/direct_release.sh
+
 .PHONY: beta
 ## [Release] Promote the current build to the public TestFlight beta (re-run until Apple finishes processing)
 beta: _preflight-listing
