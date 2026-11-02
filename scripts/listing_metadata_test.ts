@@ -80,3 +80,11 @@ Deno.test("the editable version is made to carry exactly the stamped version", (
   assertEquals(versionPlan({ versionString: "1.0.10", editable: false }, "1.0.10"), "none");
   assertEquals(versionPlan({ versionString: "1.0", editable: true }, undefined), "none");
 });
+
+Deno.test("a new version is blocked while one is with App Review", () => {
+  assertEquals(versionPlan({ versionString: "1.0.13", editable: false, state: "WAITING_FOR_REVIEW" }, "1.0.17"), "blocked");
+  assertEquals(versionPlan({ versionString: "1.0.13", editable: false, state: "IN_REVIEW" }, "1.0.17"), "blocked");
+  assertEquals(versionPlan({ versionString: "1.0.13", editable: false, state: "WAITING_FOR_REVIEW" }, "1.0.13"), "none", "re-running the same release is fine");
+  assertEquals(versionPlan({ versionString: "1.0.13", editable: false, state: "READY_FOR_SALE" }, "1.0.17"), "create");
+  assertEquals(versionPlan({ versionString: "1.0", editable: true, state: "PREPARE_FOR_SUBMISSION" }, "1.0.17"), "rename");
+});

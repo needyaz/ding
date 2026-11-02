@@ -18,6 +18,9 @@ export const EDITABLE_STATES = new Set([
   "INVALID_BINARY",
 ]);
 
+/** States in which a version is with Apple: it can't be edited, and no other version can be created. */
+export const IN_REVIEW_STATES = new Set(["WAITING_FOR_REVIEW", "IN_REVIEW"]);
+
 // deno-lint-ignore no-explicit-any
 export type Json = any;
 

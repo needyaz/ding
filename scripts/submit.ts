@@ -11,6 +11,8 @@
 
 import { asc, ascJwt, EDITABLE_STATES, fail, findApp, type Json, macVersions, PLATFORM, pass, step } from "./lib/asc.ts";
 
+/** `--withdraw`: take the version back from App Review so it (or a newer one) can be edited. Loses the place in the queue. */
+
 const SUBMITTED_STATES = new Set(["WAITING_FOR_REVIEW", "IN_REVIEW"]);
 
 export function buildNumberFromVersion(version: string): string | null {
@@ -49,6 +51,19 @@ if (import.meta.main) {
   const args = Deno.args;
   const version = args[args.indexOf("--version") + 1];
   const dry = args.includes("--dry-run");
+  if (args.includes("--withdraw")) {
+    const jwt = await ascJwt();
+    const appId = await findApp(jwt);
+    const waiting = (await asc(jwt, `/apps/${appId}/reviewSubmissions?filter[state]=WAITING_FOR_REVIEW&filter[platform]=${PLATFORM}`)).data as Json[];
+    if (waiting.length === 0) { pass("Nothing is waiting for review, so there is nothing to withdraw."); Deno.exit(0); }
+    if (dry) { pass(`dry run: would withdraw ${waiting.length} submission(s) waiting for review.`); Deno.exit(0); }
+    for (const submission of waiting) {
+      step("Withdrawing the submission…");
+      await asc(jwt, `/reviewSubmissions/${submission.id}`, { method: "PATCH", body: JSON.stringify({ data: { type: "reviewSubmissions", id: submission.id, attributes: { canceled: true } } }) });
+    }
+    pass("Withdrawn. The version is editable again.");
+    Deno.exit(0);
+  }
   const buildNumber = buildNumberFromVersion(version ?? "");
   if (!buildNumber) { console.error("usage: submit.ts --version 1.0.<build number> [--dry-run]"); Deno.exit(1); }
 

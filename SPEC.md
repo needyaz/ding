@@ -197,7 +197,8 @@ Anything that touches the system sits behind a small protocol or closure so test
   age rating, content rights, price, availability) and `screenshots/`. On the build box `make release` uploads to TestFlight, applies all of it through the
   App Store Connect API with read-back (`store-setup-`, `listing-` and `screenshots-` `dump`/`diff`/`apply` targets, as in Mylo) and submits the version to
   App Review (`make submit`, also usable alone); `make beta` promotes a build to the public TestFlight beta. The App Review contact comes from the build box's
-  environment, never the repo. The release version is `1.0.<commit count>`. `make test-listing` tests the Deno tools offline.
+  environment, never the repo. The release version is `1.0.<commit count>`. `make release` stops before building if a version is with App Review (Apple allows no second
+  version then); `make withdraw` takes the waiting version back. `make test-listing` tests the Deno tools offline.
 - The app identity is one build setting, `DING_BUNDLE_ID` (with `DEVELOPMENT_TEAM`): the bundle IDs, the app group and the helper identifier Ding accepts all derive
   from it, and `make TEAM=… BUNDLE_ID=…` overrides them so anyone can build a copy under their own identity.
 - `make github-release` (build box only) builds a Developer ID-signed, notarized Ding and attaches it to the GitHub Release `v<VERSION>`; it is separate from `make release`,

@@ -16,7 +16,7 @@
  * Needs ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_FILEPATH (build box only).
  */
 
-import { asc, ascJwt, createVersion, fail, findApp, type Json, macVersions, pass, pickTarget, step, EDITABLE_STATES } from "./lib/asc.ts";
+import { asc, ascJwt, createVersion, EDITABLE_STATES, fail, findApp, IN_REVIEW_STATES, type Json, macVersions, pass, pickTarget, step } from "./lib/asc.ts";
 
 const DESIRED_PATH = new URL("../listing/metadata.json", import.meta.url).pathname;
 
@@ -133,10 +133,19 @@ export function reviewContactFromEnv(env: Record<string, string>): Review {
  * An editable version with another name (one made by hand in the web UI, say) is renamed rather than left to
  * mismatch; with none editable, a new one is created.
  */
-export function versionPlan(current: { versionString: string; editable: boolean }, wanted: string | undefined): "none" | "rename" | "create" {
+export function versionPlan(
+  current: { versionString: string; editable: boolean; state?: string },
+  wanted: string | undefined,
+): "none" | "rename" | "create" | "blocked" {
   if (!wanted || current.versionString === wanted) return "none";
-  return current.editable ? "rename" : "create";
+  if (current.editable) return "rename";
+  // Apple refuses a second version while one is with App Review.
+  return current.state && IN_REVIEW_STATES.has(current.state) ? "blocked" : "create";
 }
+
+export const blockedMessage = (versionString: string, state: string, wanted: string) =>
+  `Version ${versionString} is ${state}, and Apple doesn't allow a new version (${wanted}) while one is with App Review. ` +
+  `Wait for the result, or withdraw it with \`make withdraw\` and run again.`;
 
 /** Whether a change can be written without an editable version (promotional text on an existing locale can). */
 export function needsEditableVersion(change: Change, localeExistsOnStore: boolean): boolean {
@@ -225,7 +234,11 @@ function attributesFor(section: Section, loc: Localization): Record<string, stri
 
 async function apply(jwt: string, live: Live, desired: Desired, versionToCreate: string | undefined): Promise<void> {
   let state = live;
-  const plan = versionPlan({ versionString: state.versionString, editable: state.versionEditable }, versionToCreate);
+  const plan = versionPlan({ versionString: state.versionString, editable: state.versionEditable, state: state.versionState }, versionToCreate);
+  if (plan === "blocked") {
+    fail(blockedMessage(state.versionString, state.versionState, versionToCreate!));
+    Deno.exit(1);
+  }
   if (plan === "rename") {
     step(`Renaming version ${state.versionString} to ${versionToCreate}…`);
     await asc(jwt, `/appStoreVersions/${state.versionId}`, {
@@ -359,8 +372,8 @@ async function loadDesired(): Promise<Desired> {
 
 if (import.meta.main) {
   const [command, ...rest] = Deno.args;
-  if (!["check", "dump", "diff", "apply"].includes(command ?? "")) {
-    console.error("usage: listing_metadata.ts <check|dump|diff|apply> [--create-version <string>]");
+  if (!["check", "dump", "diff", "apply", "gate"].includes(command ?? "")) {
+    console.error("usage: listing_metadata.ts <check|dump|diff|apply|gate> [--create-version <string>]");
     Deno.exit(1);
   }
   const desired = await loadDesired();
@@ -374,6 +387,7 @@ if (import.meta.main) {
   let live = await read(jwt);
   if (!live) {
     fail("The app has no macOS version yet. Run `apply --create-version <string>` after the first build is uploaded, or add one in App Store Connect.");
+    if (command === "gate") Deno.exit(0);
     if (command !== "apply" || !rest.includes("--create-version")) Deno.exit(1);
     const appId = await findApp(jwt);
     await createVersion(jwt, appId, rest[rest.indexOf("--create-version") + 1]);
@@ -386,10 +400,25 @@ if (import.meta.main) {
     console.log(JSON.stringify(live.desired, null, 2));
     Deno.exit(0);
   }
+  if (command === "gate") {
+    // `make release` runs this before building, so a release that can't be applied stops before it starts.
+    const gateFlag = rest.indexOf("--create-version");
+    const gateVersion = gateFlag >= 0 ? rest[gateFlag + 1] : undefined;
+    if (versionPlan({ versionString: live.versionString, editable: live.versionEditable, state: live.versionState }, gateVersion) === "blocked") {
+      fail(blockedMessage(live.versionString, live.versionState, gateVersion!));
+      Deno.exit(1);
+    }
+    pass("No version is blocking this release.");
+    Deno.exit(0);
+  }
 
   const flag = rest.indexOf("--create-version");
   const wantedVersion = flag >= 0 ? rest[flag + 1] : undefined;
-  const versionStep = versionPlan({ versionString: live.versionString, editable: live.versionEditable }, wantedVersion);
+  const versionStep = versionPlan({ versionString: live.versionString, editable: live.versionEditable, state: live.versionState }, wantedVersion);
+  if (versionStep === "blocked") {
+    fail(blockedMessage(live.versionString, live.versionState, wantedVersion!));
+    Deno.exit(1);
+  }
   const changes = computeDiff(live.desired, desired);
   if (changes.length === 0 && versionStep === "none") { pass("The store already matches listing/metadata.json."); Deno.exit(0); }
   if (versionStep !== "none") console.log(`  version: ${live.versionString} → ${wantedVersion} (${versionStep})`);

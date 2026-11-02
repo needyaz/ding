@@ -143,12 +143,19 @@ beta: _preflight-listing
 release:
 	@$(MAKE) --no-print-directory _preflight
 	@$(MAKE) --no-print-directory pull
+	@# Apple allows no new version while one is with App Review: stop before building rather than after the upload.
+	$(LISTING_DENO) scripts/listing_metadata.ts gate --create-version $(VERSION)
 	@$(MAKE) --no-print-directory _testflight
 	@$(MAKE) --no-print-directory store-setup-apply
 	@$(MAKE) --no-print-directory listing-apply
 	@$(MAKE) --no-print-directory screenshots-apply
 	@$(MAKE) --no-print-directory submit
 	@echo "✓ release $(VERSION) built, uploaded, listed and submitted for App Review"
+
+.PHONY: withdraw
+## [Release] Withdraw the version waiting for App Review so it can be edited (loses its place in the queue; DRY=1 to preview)
+withdraw: _preflight-listing
+	deno run --allow-net --allow-env --allow-read scripts/submit.ts --withdraw $(if $(DRY),--dry-run)
 
 .PHONY: submit
 ## [Release] Attach the build to version VERSION and submit it to App Review (also the last step of `release`; DRY=1 to preview)

@@ -33,6 +33,9 @@ The marketing version is `1.0.<build number>`, stamped at archive time like Mylo
 
 On the build box, `make release` does everything, in this order (as Mylo's `release-ios`):
 
+0. **Gate:** Apple allows no new version while one is waiting for or in App Review, so `make release` stops here, before building, if that is the
+   state (re-running the release for the version that is already in review is fine). Wait for the result, or `make withdraw` (loses the place in the
+   queue; `DRY=1` previews) and run again.
 1. **`testflight`:** preflight, `pull`, then the duplicate-build check (`scripts/asc_build_check.ts`: a build already on App Store
    Connect is reused, a burned number stops the run, anything unknown builds as usual), archive and upload.
 2. **`store-setup-apply`:** the app's one-time settings from `listing/app.json`: content rights, category, age rating, price, availability.
