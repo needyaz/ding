@@ -14,7 +14,7 @@ public enum EventDisplay {
         return formatter.string(from: day)
     }
 
-    /// "All day", "9:00 AM – 9:30 AM", with " · Maybe" appended for tentative events.
+    /// "All day", "9:00 AM – 9:30 AM", with " · Maybe" or " · Not responded" appended for unconfirmed events.
     public static func timeText(for event: DingEvent, use24Hour: Bool, timeZone: TimeZone = .current) -> String {
         var text: String
         if event.isAllDay {
@@ -24,7 +24,7 @@ public enum EventDisplay {
             let end = TimeFormat.string(event.end, use24Hour: use24Hour, timeZone: timeZone)
             text = "\(start) – \(end)"
         }
-        if event.isMaybe { text += " · Maybe" }
+        if let label = event.response.label { text += " · \(label)" }
         return text
     }
 

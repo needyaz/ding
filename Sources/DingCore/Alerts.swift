@@ -38,17 +38,25 @@ public struct AlertSettings: Equatable, Sendable {
     public var alertLeadMinutes: Int
     /// By default only events with a meeting link alert.
     public var includeEventsWithoutLink: Bool
+    /// Whether "maybe" and not-yet-answered meetings also get a notification. Never affects accepted meetings.
+    public var notifyUnconfirmed: Bool
+    /// Whether they also get the edge flash or full-screen reminder. Off by default: those are loud.
+    public var alertUnconfirmed: Bool
 
     public init(
         notificationLeadMinutes: Int = 5,
         mode: AlertMode = .off,
         alertLeadMinutes: Int = 0,
-        includeEventsWithoutLink: Bool = false
+        includeEventsWithoutLink: Bool = false,
+        notifyUnconfirmed: Bool = true,
+        alertUnconfirmed: Bool = false
     ) {
         self.notificationLeadMinutes = notificationLeadMinutes
         self.mode = mode
         self.alertLeadMinutes = alertLeadMinutes
         self.includeEventsWithoutLink = includeEventsWithoutLink
+        self.notifyUnconfirmed = notifyUnconfirmed
+        self.alertUnconfirmed = alertUnconfirmed
     }
 }
 
@@ -67,14 +75,15 @@ public enum AlertPlanner {
         var plan: [ScheduledAlert] = []
         var notificationCount = 0
         for event in eligible {
-            if settings.notificationLeadMinutes > 0, notificationCount < maxNotifications {
+            if settings.notificationLeadMinutes > 0, notificationCount < maxNotifications,
+               settings.notifyUnconfirmed || !event.isUnconfirmed {
                 let fireDate = event.start.addingTimeInterval(-Double(settings.notificationLeadMinutes) * 60)
                 if fireDate > now {
                     plan.append(ScheduledAlert(eventID: event.id, kind: .notification, fireDate: fireDate))
                     notificationCount += 1
                 }
             }
-            if settings.mode != .off {
+            if settings.mode != .off, settings.alertUnconfirmed || !event.isUnconfirmed {
                 let fireDate = event.start.addingTimeInterval(-Double(max(settings.alertLeadMinutes, 0)) * 60)
                 if fireDate > now {
                     plan.append(ScheduledAlert(eventID: event.id, kind: .alert, fireDate: fireDate))

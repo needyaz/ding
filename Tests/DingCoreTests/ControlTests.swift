@@ -4,8 +4,8 @@ import XCTest
 final class ControlAPITests: DingCoreTestCase {
     private var la: TimeZone { calendar.timeZone }
 
-    private func meeting(_ id: String, _ start: Date, minutes: Int = 30, link: MeetingService? = .zoom, allDay: Bool = false, maybe: Bool = false) -> DingEvent {
-        var e = event(id, start, minutes: minutes, link: link, allDay: allDay, maybe: maybe)
+    private func meeting(_ id: String, _ start: Date, minutes: Int = 30, link: MeetingService? = .zoom, allDay: Bool = false, response: ResponseStatus = .accepted) -> DingEvent {
+        var e = event(id, start, minutes: minutes, link: link, allDay: allDay, response: response)
         e.calendarTitle = "Work"
         return e
     }
@@ -56,7 +56,7 @@ final class ControlAPITests: DingCoreTestCase {
     }
 
     func testTentativeAndAllDayAreReported() {
-        let s = ControlAPI.summary(of: meeting("a", date(2026, 10, 31), minutes: 1440, link: nil, allDay: true, maybe: true), now: date(2026, 10, 31, 9), timeZone: la)
+        let s = ControlAPI.summary(of: meeting("a", date(2026, 10, 31), minutes: 1440, link: nil, allDay: true, response: .maybe), now: date(2026, 10, 31, 9), timeZone: la)
         XCTAssertTrue(s.isTentative)
         XCTAssertTrue(s.isAllDay)
     }
@@ -157,6 +157,14 @@ final class ControlAPITests: DingCoreTestCase {
         let now = date(2026, 10, 31, 9)
         let events = [meeting("plain", date(2026, 10, 31, 9, 10), link: nil), meeting("linked", date(2026, 10, 31, 10))]
         XCTAssertEqual(try ControlAPI.openTarget(events, now: now, id: nil).id, "linked")
+    }
+
+    func testTentativeMeansMaybeOrNotAnsweredYet() {
+        let now = date(2026, 10, 31, 9, 0)
+        for (response, expected) in [(ResponseStatus.accepted, false), (.maybe, true), (.notResponded, true)] {
+            let s = ControlAPI.summary(of: meeting("a", date(2026, 10, 31, 10), response: response), now: now, timeZone: la)
+            XCTAssertEqual(s.isTentative, expected, "\(response)")
+        }
     }
 
     func testJoinByID() throws {

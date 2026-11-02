@@ -3,13 +3,19 @@ import Foundation
 public struct DayGroup: Identifiable, Equatable, Sendable {
     /// Start of the day in the calendar used for grouping.
     public let day: Date
+    /// In display order: all-day first, then by start; inside a run of overlapping meetings, accepted ones first.
     public let events: [DingEvent]
+    /// Where each event (by id) sits in a run of overlapping meetings.
+    public let overlap: [String: OverlapPosition]
     public var id: Date { day }
 
-    public init(day: Date, events: [DingEvent]) {
+    public init(day: Date, events: [DingEvent], overlap: [String: OverlapPosition] = [:]) {
         self.day = day
         self.events = events
+        self.overlap = overlap
     }
+
+    public func position(of event: DingEvent) -> OverlapPosition { overlap[event.id] ?? .none }
 }
 
 public enum DayGrouping {
@@ -27,7 +33,8 @@ public enum DayGrouping {
         }
 
         return eventsByDay.keys.sorted().map { day in
-            DayGroup(day: day, events: eventsByDay[day, default: []].sorted(by: isDisplayedBefore))
+            let arranged = Overlap.arrange(eventsByDay[day, default: []].sorted(by: isDisplayedBefore))
+            return DayGroup(day: day, events: arranged.events, overlap: arranged.positions)
         }
     }
 

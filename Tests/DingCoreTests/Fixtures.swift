@@ -16,19 +16,19 @@ class DingCoreTestCase: XCTestCase {
     /// A 30-minute event; `link: true` gives it a Zoom link.
     func event(
         _ id: String, _ start: Date, minutes: Int = 30, link: Bool = true,
-        allDay: Bool = false, maybe: Bool = false, calendarID: String = "cal"
+        allDay: Bool = false, response: ResponseStatus = .accepted, calendarID: String = "cal"
     ) -> DingEvent {
-        event(id, start, minutes: minutes, link: link ? .zoom : nil, allDay: allDay, maybe: maybe, calendarID: calendarID)
+        event(id, start, minutes: minutes, link: link ? .zoom : nil, allDay: allDay, response: response, calendarID: calendarID)
     }
 
     /// Like the above, with a link for a specific service (or none).
     func event(
         _ id: String, _ start: Date, minutes: Int = 30, link: MeetingService?,
-        allDay: Bool = false, maybe: Bool = false, calendarID: String = "cal"
+        allDay: Bool = false, response: ResponseStatus = .accepted, calendarID: String = "cal"
     ) -> DingEvent {
         DingEvent(
             id: id, title: id, start: start, end: start.addingTimeInterval(Double(minutes) * 60), isAllDay: allDay,
-            calendarID: calendarID, isMaybe: maybe,
+            calendarID: calendarID, response: response,
             link: link.map { MeetingLink(service: $0, url: URL(string: "https://example.com/\(id)")!) }
         )
     }

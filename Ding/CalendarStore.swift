@@ -92,9 +92,19 @@ final class CalendarStore: CalendarSource {
             calendarID: calendar.calendarIdentifier,
             calendarTitle: calendar.title,
             calendarColor: color(of: calendar),
-            isMaybe: currentUser?.participantStatus == .tentative,
+            response: response(for: currentUser?.participantStatus),
             link: MeetingLinkDetector.detect(LinkSource(location: event.location, url: event.url, notes: event.notes))
         )
+    }
+
+    /// "Maybe" and "not answered" are the two unconfirmed states; everything else (accepted, delegated, or no attendee
+    /// record at all, as on the user's own events) counts as going.
+    nonisolated static func response(for status: EKParticipantStatus?) -> ResponseStatus {
+        switch status {
+        case .tentative: .maybe
+        case .pending: .notResponded
+        default: .accepted
+        }
     }
 
     nonisolated static func color(of calendar: EKCalendar) -> CalendarColor {

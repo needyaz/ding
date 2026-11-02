@@ -18,6 +18,21 @@ final class PreferencesTests: IsolatedDefaultsTestCase {
         XCTAssertFalse(suite.bool(forKey: Pref.alertIncludeAll))
     }
 
+    func testUnconfirmedMeetingsNotifyButDoNotTakeOverTheScreenByDefault() {
+        XCTAssertTrue(suite.bool(forKey: Pref.notifyUnconfirmed))
+        XCTAssertFalse(suite.bool(forKey: Pref.alertUnconfirmed))
+        XCTAssertTrue(Pref.alertSettings.notifyUnconfirmed)
+        XCTAssertFalse(Pref.alertSettings.alertUnconfirmed)
+        suite.set(true, forKey: Pref.alertUnconfirmed)
+        suite.set(false, forKey: Pref.notifyUnconfirmed)
+        XCTAssertTrue(Pref.alertSettings.alertUnconfirmed)
+        XCTAssertFalse(Pref.alertSettings.notifyUnconfirmed)
+    }
+
+    func testTheMaybeSwitchKeepsItsStoredKey() {
+        XCTAssertEqual(Pref.showMaybe, "showMaybe", "existing choices carry over")
+    }
+
     func testHotkeysAndAlertsAreOffByDefault() {
         XCTAssertEqual(Pref.alertSettings.mode, .off)
         XCTAssertFalse(Pref.alertSettings.includeEventsWithoutLink)

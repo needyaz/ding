@@ -47,12 +47,12 @@ enum ScreenshotFixtures {
 
     private static func meeting(
         _ title: String, day: Int, _ hour: Int, _ minute: Int, minutes: Int,
-        in calendar: Calendar_, service: MeetingService? = nil, maybe: Bool = false
+        in calendar: Calendar_, service: MeetingService? = nil, response: ResponseStatus = .accepted
     ) -> DingEvent {
         let start = at(day: day, hour: hour, minute: minute)
         return DingEvent(
             id: "\(day)-\(hour)-\(minute)-\(title)", title: title, start: start, end: start.addingTimeInterval(Double(minutes) * 60),
-            calendarID: calendar.id, calendarTitle: calendar.title, calendarColor: calendar.color, isMaybe: maybe,
+            calendarID: calendar.id, calendarTitle: calendar.title, calendarColor: calendar.color, response: response,
             link: service.map { MeetingLink(service: $0, url: URL(string: "https://example.com/\(title.hashValue.magnitude)")!) }
         )
     }
@@ -70,11 +70,12 @@ enum ScreenshotFixtures {
         meeting("Design review", day: 0, 11, 0, minutes: 60, in: work, service: .zoom),
         meeting("Lunch with Maya", day: 0, 12, 30, minutes: 60, in: personal),
         meeting("1:1 with Jordan", day: 0, 14, 0, minutes: 30, in: work, service: .teams),
-        meeting("Quarterly planning", day: 0, 15, 30, minutes: 60, in: team, service: .webex, maybe: true),
+        meeting("Quarterly planning", day: 0, 15, 30, minutes: 60, in: team, service: .webex, response: .maybe),
+        meeting("Roadmap review", day: 0, 15, 45, minutes: 45, in: work, service: .zoom),
         allDay("Mom's birthday", day: 1, in: family),
         meeting("Product sync", day: 1, 9, 0, minutes: 30, in: work, service: .zoom),
         meeting("Dentist", day: 1, 13, 0, minutes: 45, in: personal),
-        meeting("Customer call", day: 1, 15, 0, minutes: 45, in: work, service: .googleMeet),
+        meeting("Customer call", day: 1, 15, 0, minutes: 45, in: work, service: .googleMeet, response: .notResponded),
         meeting("Offsite planning", day: 2, 10, 30, minutes: 60, in: team, service: .teams),
         meeting("Piano lesson", day: 2, 16, 0, minutes: 45, in: family),
     ]

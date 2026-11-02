@@ -69,7 +69,7 @@ struct MenuContentView: View {
             ForEach(model.groups) { group in
                 DayHeader(title: EventDisplay.dayTitle(group.day, now: model.now))
                 ForEach(group.events) { event in
-                    EventRow(event: event, now: model.now, use24Hour: use24Hour) { model.join(event) }
+                    EventRow(event: event, now: model.now, use24Hour: use24Hour, position: group.position(of: event)) { model.join(event) }
                 }
             }
         }
@@ -166,6 +166,8 @@ private struct EventRow: View {
     let event: DingEvent
     let now: Date
     let use24Hour: Bool
+    /// Where this meeting sits in a run of overlapping meetings; they share a bracket along the left edge.
+    var position: OverlapPosition = .none
     let join: () -> Void
     @State private var isHovering = false
 
@@ -173,10 +175,16 @@ private struct EventRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Circle()
-                .fill(event.calendarColor.color)
-                .frame(width: 9, height: 9)
-                .accessibilityHidden(true)
+            // Filled for a meeting the user is going to, a ring for one they haven't confirmed.
+            Group {
+                if event.isUnconfirmed {
+                    Circle().strokeBorder(event.calendarColor.color, lineWidth: 1.5)
+                } else {
+                    Circle().fill(event.calendarColor.color)
+                }
+            }
+            .frame(width: 9, height: 9)
+            .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
                 Text(event.title)
                     .font(event.isAllDay ? .callout.italic() : .callout)
@@ -193,16 +201,19 @@ private struct EventRow: View {
                     .help("Join \(link.service.displayName)")
             }
         }
-        .opacity(event.isMaybe ? 0.6 : 1)
+        .opacity(event.isUnconfirmed ? 0.6 : 1)
         .padding(.horizontal, Metrics.horizontalPadding)
         .padding(.vertical, 5)
+        // After the padding, so the bracket sits in the margin to the left of the dots and runs unbroken between rows.
+        .overlay(alignment: .leading) { OverlapBracket(position: position) }
         .background { background }
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
         .onTapGesture { if event.hasLink { join() } }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(event.hasLink ? .isButton : [])
-        .accessibilityHint(event.link.map { "Joins with \($0.service.displayName)" } ?? "")
+        .accessibilityHint([event.link.map { "Joins with \($0.service.displayName)" }, position.overlapsAnother ? "Overlaps another meeting" : nil]
+            .compactMap { $0 }.joined(separator: ". "))
         .accessibilityAction { if event.hasLink { join() } }
     }
 
@@ -214,5 +225,25 @@ private struct EventRow: View {
             Color.accentColor.opacity(0.10)
         }
         if isHovering && event.hasLink { Color.accentColor.opacity(0.18) }
+    }
+}
+
+/// One bracket along the left edge of a run of overlapping meetings, rounded at its first and last row.
+struct OverlapBracket: View {
+    let position: OverlapPosition
+
+    var body: some View {
+        if position != .none {
+            UnevenRoundedRectangle(
+                topLeadingRadius: position == .first ? 2 : 0, bottomLeadingRadius: position == .last ? 2 : 0,
+                bottomTrailingRadius: position == .last ? 2 : 0, topTrailingRadius: position == .first ? 2 : 0
+            )
+            .fill(Color.secondary.opacity(0.55))
+            .frame(width: 3)
+            .padding(.leading, 4)
+            .padding(.top, position == .first ? 3 : 0)
+            .padding(.bottom, position == .last ? 3 : 0)
+            .accessibilityHidden(true)
+        }
     }
 }

@@ -18,6 +18,7 @@ public struct MeetingSummary: Codable, Equatable, Sendable {
     /// "Zoom", "Google Meet", "Microsoft Teams", "Webex" or "Other link"; nil if the meeting has no link.
     public var service: String?
     public var canOpen: Bool
+    /// "Maybe" or not answered yet.
     public var isTentative: Bool
 
     /// Fields that don't apply are written as explicit nulls, so a client always sees the same shape.
@@ -131,7 +132,7 @@ public enum ControlAPI {
             calendar: event.calendarTitle,
             service: event.link?.service.displayName,
             canOpen: canOpen(event),
-            isTentative: event.isMaybe
+            isTentative: event.isUnconfirmed
         )
     }
 

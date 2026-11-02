@@ -15,8 +15,8 @@ final class AppModelTests: IsolatedDefaultsTestCase {
         }
     }
 
-    private func event(_ id: String, offset: TimeInterval, minutes: Int = 30, link: Bool = true, allDay: Bool = false, maybe: Bool = false, calendarID: String = "cal") -> DingEvent {
-        .test(id, startingIn: offset, from: now, minutes: minutes, link: link, allDay: allDay, maybe: maybe, calendarID: calendarID)
+    private func event(_ id: String, offset: TimeInterval, minutes: Int = 30, link: Bool = true, allDay: Bool = false, response: ResponseStatus = .accepted, calendarID: String = "cal") -> DingEvent {
+        .test(id, startingIn: offset, from: now, minutes: minutes, link: link, allDay: allDay, response: response, calendarID: calendarID)
     }
 
     func testNextEventIsTheEarliestUpcomingTimedEvent() {
@@ -55,9 +55,29 @@ final class AppModelTests: IsolatedDefaultsTestCase {
     }
 
     func testHidingMaybeEvents() {
-        model.events = [event("maybe", offset: 600, maybe: true), event("sure", offset: 1200)]
+        model.events = [event("maybe", offset: 600, response: .maybe), event("sure", offset: 1200)]
         suite.set(false, forKey: Pref.showMaybe)
         XCTAssertEqual(model.visibleEvents.map(\.id), ["sure"])
+    }
+
+    func testHidingMaybeAlsoHidesUnansweredInvitations() {
+        model.events = [event("unanswered", offset: 600, response: .notResponded), event("sure", offset: 1200)]
+        XCTAssertEqual(model.visibleEvents.count, 2)
+        suite.set(false, forKey: Pref.showMaybe)
+        XCTAssertEqual(model.visibleEvents.map(\.id), ["sure"])
+    }
+
+    func testAnAcceptedMeetingIsNextOverAnUnconfirmedOneAtTheSameTime() {
+        model.events = [event("a-maybe", offset: 600, response: .maybe), event("z-sure", offset: 600)]
+        XCTAssertEqual(model.nextEvent?.id, "z-sure")
+    }
+
+    func testOverlappingMeetingsAreGroupedWithAcceptedFirst() {
+        model.events = [event("maybe", offset: 600, minutes: 60, response: .maybe), event("sure", offset: 1200, minutes: 30)]
+        let group = model.groups[0]
+        XCTAssertEqual(group.events.map(\.id), ["sure", "maybe"])
+        XCTAssertEqual(group.position(of: group.events[0]), .first)
+        XCTAssertEqual(group.position(of: group.events[1]), .last)
     }
 
     func testGroupsRespectTheRangeSetting() {

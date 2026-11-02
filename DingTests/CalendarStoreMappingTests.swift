@@ -41,8 +41,17 @@ final class CalendarStoreMappingTests: XCTestCase {
         XCTAssertEqual(mapped.end, start.addingTimeInterval(1800))
         XCTAssertEqual(mapped.calendarTitle, "Work")
         XCTAssertFalse(mapped.isAllDay)
-        XCTAssertFalse(mapped.isMaybe)
+        XCTAssertEqual(mapped.response, .accepted)
         XCTAssertNil(mapped.link)
+    }
+
+    func testParticipantStatusMapsToTheResponse() {
+        XCTAssertEqual(CalendarStore.response(for: .tentative), .maybe)
+        XCTAssertEqual(CalendarStore.response(for: .pending), .notResponded)
+        for status in [EKParticipantStatus.accepted, .delegated, .completed, .inProcess, .unknown] {
+            XCTAssertEqual(CalendarStore.response(for: status), .accepted, "\(status.rawValue)")
+        }
+        XCTAssertEqual(CalendarStore.response(for: nil), .accepted, "an event with no attendee record is the user's own")
     }
 
     func testMissingOrEmptyTitleBecomesUntitled() throws {

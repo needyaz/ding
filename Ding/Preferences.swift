@@ -23,6 +23,8 @@ enum Pref {
     static let alertMode = "alertMode"
     static let alertLeadMinutes = "alertLeadMinutes"
     static let alertIncludeAll = "alertIncludeAll"
+    static let notifyUnconfirmed = "notifyUnconfirmed"
+    static let alertUnconfirmed = "alertUnconfirmed"
     static let controlReadSchedule = "controlReadSchedule"
     static let controlOpenMeetings = "controlOpenMeetings"
 
@@ -46,6 +48,10 @@ enum Pref {
         /// Early enough to join without being late, and clear of the 5-minute notification.
         static let alertLeadMinutes = 1
         static let alertIncludeAll = false
+        /// Today's behaviour: "maybe" and unanswered meetings get a notification.
+        static let notifyUnconfirmed = true
+        /// The edge flash and full-screen takeover are loud, so a meeting the user hasn't accepted doesn't trigger them.
+        static let alertUnconfirmed = false
         /// An assistant can do nothing until the user turns it on.
         static let controlReadSchedule = false
         static let controlOpenMeetings = false
@@ -72,6 +78,8 @@ enum Pref {
             alertMode: Default.alertMode.rawValue,
             alertLeadMinutes: Default.alertLeadMinutes,
             alertIncludeAll: Default.alertIncludeAll,
+            notifyUnconfirmed: Default.notifyUnconfirmed,
+            alertUnconfirmed: Default.alertUnconfirmed,
             controlReadSchedule: Default.controlReadSchedule,
             controlOpenMeetings: Default.controlOpenMeetings,
         ]
@@ -115,7 +123,9 @@ enum Pref {
             notificationLeadMinutes: defaults.integer(forKey: notifyLeadMinutes),
             mode: AlertMode(rawValue: defaults.string(forKey: alertMode) ?? "") ?? .off,
             alertLeadMinutes: defaults.integer(forKey: alertLeadMinutes),
-            includeEventsWithoutLink: defaults.bool(forKey: alertIncludeAll)
+            includeEventsWithoutLink: defaults.bool(forKey: alertIncludeAll),
+            notifyUnconfirmed: defaults.bool(forKey: notifyUnconfirmed),
+            alertUnconfirmed: defaults.bool(forKey: alertUnconfirmed)
         )
     }
 

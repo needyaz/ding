@@ -44,8 +44,19 @@ A free, open-source macOS menu bar app that shows your next meeting and lets you
 - Range setting: 1, 3, 7 or 14 days.
 - All-day events show first in each day, italic with a tinted row. A multi-day all-day event appears on each day it covers.
 - A meeting in progress is highlighted. Finished events are hidden.
-- Calendar color dot on each event; "maybe" events are dimmed and marked "· Maybe". Declined and canceled events are never shown.
-- Toggles: show events without a meeting link; show events marked "maybe".
+- Calendar color dot on each event. Declined and canceled events are never shown.
+- **Response state.** Each meeting is *accepted*, *maybe* (tentative) or *not responded* (an invitation not answered yet); EventKit `.tentative` is maybe,
+  `.pending` is not responded, and everything else (accepted, delegated, no attendee record, as on the user's own events) is accepted. Maybe and not
+  responded are both **unconfirmed**: one behaviour everywhere (dimmed to 60%, hidden by the same toggle, same reminder rules), with different labels,
+  "· Maybe" and "· Not responded". The dot is a filled circle for an accepted meeting and a ring for an unconfirmed one.
+- **Overlap.** Timed meetings whose times intersect, directly or through a chain, share one bracket along the left edge of the run, rounded at the
+  first and last row. Back-to-back meetings don't overlap, all-day events never join a run, and a zero-length meeting counts only inside what it sits in.
+  Inside a run accepted meetings are listed before unconfirmed ones; outside a run the order stays chronological. A row's accessibility hint says
+  "Overlaps another meeting". Overlap is shown, not warned about: there is no conflict notification.
+- Toggles: show events without a meeting link; show meetings marked "maybe" or not yet answered (the stored key is still `showMaybe`, so existing choices carry over).
+- "Next meeting" is the first timed event that hasn't ended, as before, with one tie-break: of meetings that start together an accepted one comes before
+  an unconfirmed one, so a maybe invitation doesn't take the countdown or the Join button from a meeting the user accepted. The "join next" hotkey shares it.
+  An earlier unconfirmed meeting is still next.
 - Clicking an event with a link joins it. Rows are accessible (one element, button role, hint) and day headers are marked as headers.
 - A short list is a plain stack; a long one scrolls inside a fixed 460pt. A scroll view reports no height of its own in the self-sizing menu bar
   window, so without an explicit height the list collapses to nothing (this shipped once: a 340x36 popover with only the footer). The size is
@@ -88,6 +99,9 @@ Two separate things, each with its own timing. (The code calls the second an "al
 - The two times are independent and may coincide. The default is a 5-minute notification followed by a full-screen reminder 1 minute before.
 - A **Preview** button shows the chosen reminder for a sample meeting that starts when a real one would.
 - Both only fire for timed events with a meeting link by default (setting to include events without one). All-day events never fire.
+- Two settings cover unconfirmed meetings (maybe or not yet answered), one in each section, independent of each other and never affecting accepted
+  meetings: **"Also for meetings marked 'maybe' or not yet answered"** for the notification (default **on**, as before) and for the screen reminder
+  (default **off**: the edge flash and full-screen takeover are loud, and a meeting the user hasn't accepted shouldn't take over the screen).
 - Hidden calendars and events hidden by the dropdown toggles don't fire either.
 - Something whose time has already passed is not shown late, even if the meeting hasn't started. The schedule is rebuilt on every reload, so
   replanning it would show the same reminder again each time. For the same reason, a meeting created inside the lead window gets none.
@@ -120,7 +134,7 @@ Two separate things, each with its own timing. (The code calls the second an "al
 - **Off by default.** Preferences → AI Access has two switches, *Let AI assistants see my schedule* and *Let AI assistants open my meetings*, checked on every request, so
   turning one off takes effect immediately. *Copy Entry* (Claude Desktop) and *Copy Command* (Claude Code) and *Copy Path* (any other MCP app) give the client the helper's real path. The Claude Desktop entry is the `"mcpServers"` piece without outer braces, because that config file normally holds other settings and a complete document pasted into it breaks it.
 - What a client can see per meeting: id, title, start and end (local time with its UTC offset), all-day, in progress, minutes until start, calendar name,
-  the service name, whether it can be opened, tentative. Never notes, attendees, locations or meeting links: a link can carry a passcode. Inapplicable
+  the service name, whether it can be opened, tentative (`is_tentative` is true for maybe and for not yet answered; the summary's shape is unchanged). Never notes, attendees, locations or meeting links: a link can carry a passcode. Inapplicable
   fields are explicit nulls so the shape never changes. The user's calendar selection and dropdown filters apply.
 - `open_meeting` opens the meeting inside Ding, using the user's per-service open settings, and returns no link. It only opens meetings on Zoom, Google Meet,
   Microsoft Teams or Webex (`can_open` is false for an "Other link" and with no id those are skipped): an invitation's arbitrary URL can't be opened by an

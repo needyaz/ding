@@ -55,6 +55,28 @@ public struct CalendarColor: Equatable, Hashable, Sendable {
     public static let gray = CalendarColor(red: 0.55, green: 0.55, blue: 0.55)
 }
 
+/// How the user has answered an invitation. Anything but `.accepted` is "unconfirmed": shown dimmed, hidden by the
+/// same switch, and eligible for the "also for unconfirmed meetings" reminder settings.
+public enum ResponseStatus: String, Equatable, Hashable, Sendable {
+    /// Accepted, delegated, or an event with no attendee record for the user (their own events).
+    case accepted
+    /// Marked "maybe" (tentative).
+    case maybe
+    /// An invitation the user hasn't answered.
+    case notResponded
+
+    public var isUnconfirmed: Bool { self != .accepted }
+
+    /// The label shown after the time ("· Maybe"); nil for an accepted meeting.
+    public var label: String? {
+        switch self {
+        case .accepted: nil
+        case .maybe: "Maybe"
+        case .notResponded: "Not responded"
+        }
+    }
+}
+
 /// A calendar event reduced to what Ding needs. The app maps `EKEvent` into this.
 public struct DingEvent: Identifiable, Equatable, Sendable {
     public let id: String
@@ -65,11 +87,12 @@ public struct DingEvent: Identifiable, Equatable, Sendable {
     public var calendarID: String
     public var calendarTitle: String
     public var calendarColor: CalendarColor
-    /// The user marked "maybe" / tentative.
-    public var isMaybe: Bool
+    public var response: ResponseStatus
     public var link: MeetingLink?
 
     public var hasLink: Bool { link != nil }
+    /// Marked "maybe" or not answered yet.
+    public var isUnconfirmed: Bool { response.isUnconfirmed }
 
     public init(
         id: String,
@@ -80,7 +103,7 @@ public struct DingEvent: Identifiable, Equatable, Sendable {
         calendarID: String = "",
         calendarTitle: String = "",
         calendarColor: CalendarColor = .gray,
-        isMaybe: Bool = false,
+        response: ResponseStatus = .accepted,
         link: MeetingLink? = nil
     ) {
         self.id = id
@@ -91,13 +114,14 @@ public struct DingEvent: Identifiable, Equatable, Sendable {
         self.calendarID = calendarID
         self.calendarTitle = calendarTitle
         self.calendarColor = calendarColor
-        self.isMaybe = isMaybe
+        self.response = response
         self.link = link
     }
 }
 
 public struct EventFilter: Equatable, Sendable {
     public var showWithoutLink: Bool
+    /// Whether unconfirmed meetings ("maybe" or not answered) are shown. Named for the stored preference it mirrors.
     public var showMaybe: Bool
     /// Stored as the *excluded* set so calendars that appear later default to on.
     public var disabledCalendarIDs: Set<String>
@@ -111,7 +135,7 @@ public struct EventFilter: Equatable, Sendable {
     public func apply(_ events: [DingEvent]) -> [DingEvent] {
         events.filter { event in
             if disabledCalendarIDs.contains(event.calendarID) { return false }
-            if !showMaybe && event.isMaybe { return false }
+            if !showMaybe && event.isUnconfirmed { return false }
             if !showWithoutLink && !event.hasLink { return false }
             return true
         }

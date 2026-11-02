@@ -17,8 +17,9 @@ final class ViewSmokeTests: IsolatedDefaultsTestCase {
         let zoom = MeetingLink(service: .zoom, url: URL(string: "https://zoom.us/j/1")!)
         return [
             DingEvent(id: "1", title: "A meeting with a very long title that should be truncated by the row", start: now.addingTimeInterval(600), end: now.addingTimeInterval(2400), calendarColor: CalendarColor(red: 1, green: 0, blue: 0), link: zoom),
-            DingEvent(id: "2", title: "Maybe", start: now.addingTimeInterval(7200), end: now.addingTimeInterval(9000), isMaybe: true),
+            DingEvent(id: "2", title: "Maybe", start: now.addingTimeInterval(7200), end: now.addingTimeInterval(9000), response: .maybe),
             DingEvent(id: "3", title: "Holiday", start: Calendar.current.startOfDay(for: now), end: Calendar.current.startOfDay(for: now).addingTimeInterval(86_399), isAllDay: true),
+            DingEvent(id: "5", title: "Unanswered", start: now.addingTimeInterval(7500), end: now.addingTimeInterval(9300), response: .notResponded),
             DingEvent(id: "4", title: "Tomorrow", start: now.addingTimeInterval(90_000), end: now.addingTimeInterval(91_800), link: zoom),
         ]
     }

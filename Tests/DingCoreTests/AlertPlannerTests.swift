@@ -152,4 +152,31 @@ final class AlertQueueTests: DingCoreTestCase {
         XCTAssertEqual(queue.popDue(now: date(2026, 10, 30, 10)).count, 2)
         XCTAssertTrue(queue.pending.isEmpty)
     }
+
+    // MARK: Unconfirmed meetings
+
+    func testUnconfirmedMeetingsGetNotificationsButNoScreenReminderByDefault() {
+        let now = date(2026, 10, 30, 9, 0)
+        let events = [event("maybe", date(2026, 10, 30, 10, 0), response: .maybe), event("open", date(2026, 10, 30, 11, 0), response: .notResponded)]
+        let plan = AlertPlanner.plan(events, now: now, settings: AlertSettings(notificationLeadMinutes: 5, mode: .fullScreen))
+        XCTAssertEqual(plan.map { "\($0.eventID):\($0.kind)" }, ["maybe:notification", "open:notification"])
+    }
+
+    func testEachUnconfirmedSettingIsIndependent() {
+        let now = date(2026, 10, 30, 9, 0)
+        let e = event("maybe", date(2026, 10, 30, 10, 0), response: .maybe)
+        let onlyReminder = AlertSettings(notificationLeadMinutes: 5, mode: .edgeFlash, notifyUnconfirmed: false, alertUnconfirmed: true)
+        XCTAssertEqual(AlertPlanner.plan([e], now: now, settings: onlyReminder).map(\.kind), [.alert])
+        let neither = AlertSettings(notificationLeadMinutes: 5, mode: .edgeFlash, notifyUnconfirmed: false, alertUnconfirmed: false)
+        XCTAssertTrue(AlertPlanner.plan([e], now: now, settings: neither).isEmpty)
+    }
+
+    func testAcceptedMeetingsAreNeverAffectedByTheUnconfirmedSettings() {
+        let now = date(2026, 10, 30, 9, 0)
+        let e = event("sure", date(2026, 10, 30, 10, 0))
+        let off = AlertSettings(notificationLeadMinutes: 5, mode: .fullScreen, notifyUnconfirmed: false, alertUnconfirmed: false)
+        XCTAssertEqual(AlertPlanner.plan([e], now: now, settings: off).map(\.kind), [.notification, .alert])
+        XCTAssertTrue(AlertSettings().notifyUnconfirmed)
+        XCTAssertFalse(AlertSettings().alertUnconfirmed)
+    }
 }

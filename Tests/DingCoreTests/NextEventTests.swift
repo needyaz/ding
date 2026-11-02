@@ -53,4 +53,23 @@ final class JoinSelectionTests: DingCoreTestCase {
         XCTAssertNil(JoinSelection.candidate(from: [event("a", date(2026, 10, 30, 10), link: nil)], now: date(2026, 10, 30, 9)))
         XCTAssertNil(JoinSelection.candidate(from: [event("d", date(2026, 10, 30), minutes: 1440, allDay: true)], now: date(2026, 10, 30, 9)))
     }
+
+    // MARK: Response tie-break
+
+    func testAnAcceptedMeetingBeatsAnUnconfirmedOneThatStartsAtTheSameTime() {
+        let t = date(2026, 10, 30, 10, 0)
+        let events = [event("a-maybe", t, response: .maybe), event("b-unanswered", t, response: .notResponded), event("z-accepted", t)]
+        XCTAssertEqual(NextEvent.select(from: events, now: date(2026, 10, 30, 9, 0))?.id, "z-accepted")
+        XCTAssertEqual(JoinSelection.candidate(from: events, now: date(2026, 10, 30, 9, 0))?.id, "z-accepted", "the join hotkey shares the rule")
+    }
+
+    func testAnEarlierUnconfirmedMeetingIsStillNext() {
+        let events = [event("maybe", date(2026, 10, 30, 10, 0), response: .maybe), event("accepted", date(2026, 10, 30, 10, 30))]
+        XCTAssertEqual(NextEvent.select(from: events, now: date(2026, 10, 30, 9, 0))?.id, "maybe")
+    }
+
+    func testUnconfirmedMeetingsOfTheSameStartFallBackToTitle() {
+        let t = date(2026, 10, 30, 10, 0)
+        XCTAssertEqual(NextEvent.select(from: [event("b", t, response: .maybe), event("a", t, response: .notResponded)], now: date(2026, 10, 30, 9, 0))?.id, "a")
+    }
 }

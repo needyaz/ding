@@ -35,12 +35,12 @@ extension DingEvent {
     /// A 30-minute event starting `seconds` from `now`. `link: true` gives it a Zoom link.
     static func test(
         _ id: String, startingIn seconds: TimeInterval, from now: Date = Date(), minutes: Int = 30,
-        link: Bool = true, allDay: Bool = false, maybe: Bool = false, calendarID: String = "cal"
+        link: Bool = true, allDay: Bool = false, response: ResponseStatus = .accepted, calendarID: String = "cal"
     ) -> DingEvent {
         let start = now.addingTimeInterval(seconds)
         return DingEvent(
             id: id, title: "Event \(id)", start: start, end: start.addingTimeInterval(Double(minutes) * 60), isAllDay: allDay,
-            calendarID: calendarID, isMaybe: maybe,
+            calendarID: calendarID, response: response,
             link: link ? MeetingLink(service: .zoom, url: URL(string: "https://zoom.us/j/1")!) : nil
         )
     }

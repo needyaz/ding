@@ -41,7 +41,7 @@ struct ScreenshotScene {
                 ShotLayout(
                     caption: "Reminders on your terms.",
                     subtitle: "A notification and a bigger reminder, each with its own timing."
-                ) { preferences(.notifications, height: 540) }
+                ) { preferences(.notifications, height: 600) }
             )),
             ScreenshotScene(name: "05_calendars", view: AnyView(
                 ShotLayout(

@@ -79,7 +79,7 @@ struct GeneralTab: View {
                     ForEach(Pref.rangeDayOptions, id: \.self) { Text($0 == 1 ? "1 day" : "\($0) days").tag($0) }
                 }
                 Toggle("Show events without a meeting link", isOn: $showWithoutLink)
-                Toggle("Show events marked “maybe”", isOn: $showMaybe)
+                Toggle("Show meetings marked “maybe” or not yet answered", isOn: $showMaybe)
             }
             Section("General") {
                 Toggle("Launch at login", isOn: $launchAtLogin)
@@ -193,6 +193,8 @@ struct AlertsTab: View {
     @AppStorage(Pref.alertMode) private var mode = Pref.Default.alertMode
     @AppStorage(Pref.alertLeadMinutes) private var alertLead = Pref.Default.alertLeadMinutes
     @AppStorage(Pref.alertIncludeAll) private var includeAll = Pref.Default.alertIncludeAll
+    @AppStorage(Pref.notifyUnconfirmed) private var notifyUnconfirmed = Pref.Default.notifyUnconfirmed
+    @AppStorage(Pref.alertUnconfirmed) private var alertUnconfirmed = Pref.Default.alertUnconfirmed
 
     var body: some View {
         Form {
@@ -203,6 +205,7 @@ struct AlertsTab: View {
                 }
                 Toggle("Play a sound", isOn: $sound)
                 Toggle("Show a Join button", isOn: $joinAction)
+                Toggle("Also for meetings marked “maybe” or not yet answered", isOn: $notifyUnconfirmed)
             }
             Section {
                 Picker("Style", selection: $mode) {
@@ -219,6 +222,7 @@ struct AlertsTab: View {
                 }
                 .disabled(mode == .off)
                 Toggle("Also for events without a meeting link", isOn: $includeAll)
+                Toggle("Also for meetings marked “maybe” or not yet answered", isOn: $alertUnconfirmed)
                 Button("Preview") { model.previewAlert() }
                     .disabled(mode == .off)
             } header: {

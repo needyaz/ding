@@ -40,7 +40,7 @@ final class ModelsTests: XCTestCase {
         let e = DingEvent(id: "x", title: "T", start: Date(), end: Date())
         XCTAssertFalse(e.hasLink)
         XCTAssertFalse(e.isAllDay)
-        XCTAssertFalse(e.isMaybe)
+        XCTAssertEqual(e.response, .accepted)
         XCTAssertEqual(e.calendarColor, .gray)
         XCTAssertEqual(e.calendarID, "")
     }
@@ -66,5 +66,12 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(c.green, 0.2)
         XCTAssertEqual(c.blue, 0.3)
         XCTAssertNotEqual(c, .gray)
+    }
+
+    func testOnlyAcceptedIsConfirmed() {
+        XCTAssertFalse(ResponseStatus.accepted.isUnconfirmed)
+        XCTAssertTrue(ResponseStatus.maybe.isUnconfirmed)
+        XCTAssertTrue(ResponseStatus.notResponded.isUnconfirmed)
+        XCTAssertEqual([ResponseStatus.accepted, .maybe, .notResponded].map(\.label), [nil, "Maybe", "Not responded"])
     }
 }

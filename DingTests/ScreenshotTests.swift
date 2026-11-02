@@ -78,9 +78,15 @@ final class ScreenshotTests: XCTestCase {
     func testTheFixtureCalendarShowsEveryKindOfRow() {
         let events = ScreenshotFixtures.events
         XCTAssertTrue(events.contains { $0.isAllDay }, "an all-day row")
-        XCTAssertTrue(events.contains { $0.isMaybe }, "a maybe row")
+        XCTAssertTrue(events.contains { $0.response == .maybe }, "a maybe row")
+        XCTAssertTrue(events.contains { $0.response == .notResponded }, "a not responded row")
         XCTAssertTrue(events.contains { !$0.hasLink && !$0.isAllDay }, "a row with no link")
         XCTAssertEqual(Set(events.compactMap { $0.link?.service }), [.zoom, .googleMeet, .teams, .webex])
+    }
+
+    func testTheFixtureCalendarShowsOverlappingMeetings() {
+        let today = DayGrouping.group(ScreenshotFixtures.events, now: ScreenshotFixtures.now, days: 1)[0]
+        XCTAssertTrue(today.events.contains { today.position(of: $0).overlapsAnother }, "a bracket in the menu")
     }
 
     func testTheFixturesComeFromNowhereReal() {
