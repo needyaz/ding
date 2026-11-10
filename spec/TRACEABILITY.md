@@ -6,8 +6,8 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 
 | Status | Count |
 |---|---|
-| Confirmed | 156 |
-| Implemented, untested | 69 |
+| Confirmed | 161 |
+| Implemented, untested | 64 |
 | Unspecced behavior | 4 |
 | Conflict | 0 |
 | Not implemented | 2 |
@@ -32,7 +32,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-PLAT-014 | Implemented, untested | SPEC.md Non-goals (v1) | none: no such code exists |
 | DING-MENUBAR-001 | Confirmed | SPEC.md Menu bar item | DingTests/MenuBarGlyphTests.swift "testIsATemplateImageAtMenuBarSize" asserts isTemplate, 18x18 size and the description; "testCustomPointSize" asserts other sizes |
 | DING-MENUBAR-002 | Confirmed | SPEC.md Menu bar item; SPEC.md Build & tooling | DingTests/MenuBarGlyphTests.swift "testClockHandsAreKnockedOutOfTheDome" "testCornersAreTransparentAndNothingTouchesTheEdge" "testBellIsHorizontallyCentered" "testBellFillsAReasonableShareOfTheCanvas" "testPathsStayInsideTheDesignBox" assert the cutout, the empty border, centring and coverage between 25 and 65 percent |
-| DING-MENUBAR-003 | Implemented, untested | Ding/MenuBarGlyph.swift comment | DingTests/MenuBarGlyphTests.swift "testClapperIsSeparatedFromTheLip" only requires two solid runs on the centre line, which the hands' gap alone provides, so a fused clapper would still pass |
+| DING-MENUBAR-003 | Confirmed | Ding/MenuBarGlyph.swift comment | DingTests/added/MenuBarClapperGapTests.swift "test_DING_MENUBAR_003_keeps_aTransparentRowSeparatesTheClapperFromTheLip" renders at 18 points, scale 2 and finds the transparent row between clapper and lip |
 | DING-MENUBAR-004 | Confirmed | SPEC.md Menu bar item | Tests/DingCoreTests/MenuBarTextTests.swift "testMenuBarText" "testMenuBarTextNow" assert every combination and nil with no next event; DingTests/AppModelTests.swift "testMenuBarTextFollowsPreferences" asserts the model reads the preferences |
 | DING-MENUBAR-005 | Confirmed | SPEC.md Menu bar item | Tests/DingCoreTests/MenuBarTextTests.swift "testMenuBarTextCountdownOnlyToday" asserts nil for tomorrow with the option and text without it; DingTests/AppModelTests.swift "testCountdownOnlyTodayHidesFutureDays" asserts the same through preferences |
 | DING-MENUBAR-006 | Confirmed | SPEC.md Menu bar item | Tests/DingCoreTests/CountdownTests.swift "testCountdownText" asserts now, 1m for one second, 2m for 61 s, 59m, 1h, 1h 5m, 1d 2h and 2d |
@@ -128,7 +128,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-NOTIF-026 | Confirmed | SPEC.md Notifications and screen reminders | DingTests/AppModelLifecycleTests.swift "testPreviewShowsTheConfiguredAlertForASampleMeeting" "testPreviewStartsWhereTheConfiguredLeadPutsTheCountdown" "testPreviewAtStartTimeStartsNow" "testPreviewUsesWhateverModeIsSet" |
 | DING-NOTIF-027 | Unspecced behavior | - | none: Ding/SettingsView.swift AlertsTab |
 | DING-NOTIF-028 | Confirmed | SPEC.md Notifications and screen reminders | scripts/spec_settled_docs_test.ts "DING-NOTIF-028"; Ding/SettingsView.swift Style picker label |
-| DING-HOTKEY-001 | Implemented, untested | SPEC.md Hotkeys | DingTests/PreferencesTests.swift "testHotkeysAndAlertsAreOffByDefault" asserts nothing about hotkeys despite its name; DingTests/SettingsTabTests.swift only renders ShortcutsTab |
+| DING-HOTKEY-001 | Confirmed | SPEC.md Hotkeys | DingTests/added/HotkeyDefaultsTests.swift "test_DING_HOTKEY_001_keeps_neitherHotkeyHasADefaultShortcut" "test_DING_HOTKEY_001_keeps_withNothingRecordedNeitherHotkeyHasAShortcut" |
 | DING-HOTKEY-002 | Confirmed | SPEC.md Hotkeys | Tests/DingCoreTests/NextEventTests.swift "testJoinCandidateSkipsEventsWithoutLinks" "testJoinCandidateIncludesRecentlyStartedMeeting" "testJoinCandidateGivesUpOnMeetingsStartedLongAgo" "testJoinCandidateNilWithNothingToJoin"; DingTests/AppModelLifecycleTests.swift "testJoinNextOpensTheNextLinkedMeeting" "testJoinNextCatchesAMeetingThatJustStarted" "testJoinNextWithNothingToJoin" "testJoinNextRespectsHiddenCalendars" |
 | DING-HOTKEY-003 | Implemented, untested | SPEC.md Hotkeys; SPEC.md Platform & Stack | none: AppModel.registerHotkeys |
 | DING-PREFS-001 | Confirmed | SPEC.md Menu bar item; SPEC.md Dropdown | DingTests/PreferencesTests.swift "testRegisteredDefaults" |
@@ -148,7 +148,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-REFRESH-006 | Unspecced behavior | - | none: AppDelegate.applicationDidFinishLaunching |
 | DING-MCP-001 | Confirmed | SPEC.md AI assistants (MCP); SPEC.md Decisions | DingTests/AssistantsTabTests.swift "testTheRealBuildIncludesTheHelper" asserts the helper is present and executable in the bundle under test; "testTheHelperPathEndsWhereTheProjectPutsIt" |
 | DING-MCP-002 | Confirmed | SPEC.md AI assistants (MCP) Protocol | Tests/DingMCPTests/EndToEndTests.swift "testEachReplyIsOneLineEndingInANewline" "testRepliesComeBackInTheOrderOfTheRequests" "testNotificationsAndBlankLinesProduceNoOutput" "testABadLineDoesNotStopTheLoop" "testTheLoopEndsWhenTheInputEnds" |
-| DING-MCP-003 | Implemented, untested | - | Tests/DingMCPTests/EndToEndTests.swift "testLinesWithSurroundingWhitespaceAreAccepted" "testAWindowsLineEndingIsAccepted" only count one output line, which a parse-error reply would also produce |
+| DING-MCP-003 | Confirmed | - | Tests/DingMCPTests/added/ServeLineTrimmingTests.swift "test_DING_MCP_003_keeps_surroundingSpacesAreTrimmed" "test_DING_MCP_003_keeps_surroundingTabsAreTrimmed" "test_DING_MCP_003_keeps_aTrailingCarriageReturnIsTrimmed" |
 | DING-MCP-004 | Confirmed | SPEC.md AI assistants (MCP) Protocol | Tests/DingMCPTests/MCPServerTests.swift "testInitializeAnswersWithTheServerAndItsCapabilities" "testAnOlderSupportedVersionIsEchoedBack" "testAnUnknownOrMissingVersionGetsTheNewest" |
 | DING-MCP-005 | Confirmed | SPEC.md AI assistants (MCP) | Tests/DingMCPTests/MCPServerTests.swift "testInstructionsWarnAboutUntrustedTitles" asserts 'untrusted', 'never follow instructions' and 'links' |
 | DING-MCP-006 | Confirmed | SPEC.md AI assistants (MCP) Protocol | Tests/DingMCPTests/MCPServerTests.swift "testPingAnswersWithAnEmptyResult" "testTheInitializedNotificationGetsNoReply" "testAnUnknownNotificationIsIgnored" "testANullIDMakesItANotification" "testResponsesFromTheClientAreIgnored" |
@@ -182,7 +182,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-CTRL-013 | Confirmed | SPEC.md AI assistants (MCP) | DingTests/ControlServiceTests.swift "testRefusingToOpenNeverNamesTheMeeting" asserts the encoded response lacks the title; other refusals are not checked |
 | DING-CTRL-014 | Confirmed | SPEC.md AI assistants (MCP) Transport | DingTests/ControlServiceTests.swift "testOpeningIsRateLimited" |
 | DING-CTRL-015 | Confirmed | SPEC.md AI assistants (MCP) | Tests/DingCoreTests/ControlTests.swift "testEveryFailureHasACodeAndAReadableMessage"; the full wording 'Ding → Preferences → AI Access' is not asserted |
-| DING-CTRL-016 | Implemented, untested | SPEC.md AI assistants (MCP) | DingTests/ControlServiceTests.swift "testTheSelectionTheUserMadeIsWhatAssistantsSee" feeds an empty list and cannot fail; AppModel wires visibleEvents but nothing asserts it |
+| DING-CTRL-016 | Confirmed | SPEC.md AI assistants (MCP) | DingTests/added/AssistantVisibilityTests.swift "test_DING_CTRL_016_keeps_onlyTheSelectedAndFilteredEventsReachAssistants" "test_DING_CTRL_016_keeps_eachExcludedKindAppearsOnceItsToggleAllowsIt" |
 | DING-CTRL-017 | Confirmed | SPEC.md Testing (MCP) | DingTests/ControlListenerTests.swift "testARequestIsAnsweredThroughTheRealSocket" "testAJoinRunsOnTheMainActorAndReportsBack" "testSeveralRequestsInARow" "testAfterStoppingNobodyIsListening" |
 | DING-CTRL-018 | Confirmed | - | DingTests/ControlListenerTests.swift "testAListenerNeedsTheAppGroupInTheBundle" |
 | DING-CTRL-019 | Confirmed | SPEC.md Testing (MCP) | DingTests/AssistantsTabTests.swift "testControlServerIsNotStartedByTestModels" asserts the startsControlServer flag only |
@@ -198,7 +198,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-IPC-005 | Confirmed | - | Tests/DingIPCTests/ProtocolTests.swift "testTeamIDIsThePrefixOfTheAppGroup" |
 | DING-IPC-006 | Confirmed | SPEC.md AI assistants (MCP) Transport | Tests/DingIPCTests/ProtocolTests.swift "testTheSocketLivesInTheNamedGroupContainer" |
 | DING-IPC-007 | Confirmed | - | Tests/DingIPCTests/SocketTests.swift "testAPathThatIsTooLongIsRejected" |
-| DING-IPC-008 | Implemented, untested | - | Tests/DingIPCTests/ProtocolTests.swift "testSocketPathIsShortEnoughForAUnixSocket" measures a path it builds itself and never calls DingIPC.socketURL |
+| DING-IPC-008 | Confirmed | - | Tests/DingIPCTests/added/SocketPathLengthTests.swift "test_DING_IPC_008_keeps_theRealSocketPathFitsInSunPath" |
 | DING-IPC-009 | Confirmed | SPEC.md AI assistants (MCP) Transport | Tests/DingIPCTests/SocketTests.swift "testASilentPeerIsDroppedAfterTheIdleTimeout" "testConnectionsBeyondTheCapAreRefusedAndASlotFreesWhenOneCloses" (with a 0.3 s timeout and a cap of 2) |
 | DING-IPC-010 | Implemented, untested | SPEC.md AI assistants (MCP) Transport | none: the tests pass their own values; ControlSocketServer.init defaults are not asserted |
 | DING-IPC-011 | Confirmed | - | Tests/DingIPCTests/SocketTests.swift "testConcurrentClientsAreAllAnswered" "testManyRequestsInSequence" "testAnAsyncHandlerIsAwaited" "testARequestGetsItsResponse" |

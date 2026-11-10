@@ -21,7 +21,7 @@ code or tests, nothing was resolved here: see `spec/DRIFT_REPORT.md`. Proposed g
 in `spec/TEST_LANES.md`.
 
 <!-- BEGIN GENERATED: counts -->
-Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced behavior 4, Conflict 0, Not implemented 2, Retired 1.
+Counts: 232 requirements — Confirmed 161, Implemented, untested 64, Unspecced behavior 4, Conflict 0, Not implemented 2, Retired 1.
 <!-- END GENERATED: counts -->
 
 <!-- BEGIN GENERATED: requirements -->
@@ -46,7 +46,7 @@ Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced 
 
 - **DING-MENUBAR-001** The menu bar glyph is an 18-point template image whose accessibility description is Ding. _(SPEC SPEC.md Menu bar item)_
 - **DING-MENUBAR-002** The glyph is a horizontally centred bell with clock hands knocked out of the dome and a transparent margin on every edge. _(SPEC SPEC.md Menu bar item; SPEC.md Build & tooling)_
-- **DING-MENUBAR-003** The bell's clapper is drawn separate from its lip so it survives at small sizes. _(SPEC Ding/MenuBarGlyph.swift comment)_
+- **DING-MENUBAR-003** The bell's clapper is drawn separate from its lip so it survives at small sizes: in the rendered template image there is a fully transparent gap between the clapper and the lip at the menu bar size. _(SPEC Ding/MenuBarGlyph.swift comment)_
 - **DING-MENUBAR-004** The text beside the icon is '<title> in <countdown>', '<title> now', 'in <countdown>', '<title>' or nothing, according to the show countdown and show title options. _(SPEC SPEC.md Menu bar item)_
 - **DING-MENUBAR-005** With 'only show the countdown for today's meetings' on, the menu bar shows the icon alone when the next meeting is not today. _(SPEC SPEC.md Menu bar item)_
 - **DING-MENUBAR-006** The countdown reads 'now' at or after the start, otherwise whole minutes rounded up as Nm, Nh, Nh Mm, Nd or Nd Nh, and never 0m before the start. _(SPEC SPEC.md Menu bar item)_
@@ -159,7 +159,7 @@ Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced 
 
 ## Hotkeys
 
-- **DING-HOTKEY-001** There are two global hotkeys, Open Ding menu and Join next meeting, recorded on the Shortcuts tab and off until the user records a shortcut. _(SPEC SPEC.md Hotkeys)_
+- **DING-HOTKEY-001** There are two global hotkeys, Open Ding menu and Join next meeting, recorded on the Shortcuts tab and off until the user records a shortcut: with fresh defaults neither has a shortcut. _(SPEC SPEC.md Hotkeys)_
 - **DING-HOTKEY-002** Join next opens the next visible event that has a link, or one with a link that started within the last 15 minutes. _(SPEC SPEC.md Hotkeys)_
 - **DING-HOTKEY-003** The Open Ding menu hotkey toggles the dropdown. _(SPEC SPEC.md Hotkeys; SPEC.md Platform & Stack)_
 
@@ -187,7 +187,7 @@ Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced 
 
 - **DING-MCP-001** Every app build embeds the helper as an executable at Ding.app/Contents/Helpers/ding-mcp. _(SPEC SPEC.md AI assistants (MCP); SPEC.md Decisions)_
 - **DING-MCP-002** The helper speaks newline-delimited JSON-RPC 2.0: each reply is one line ending in a newline, replies keep request order, blank lines are skipped, a bad line does not stop the loop and the loop ends with its input. _(SPEC SPEC.md AI assistants (MCP) Protocol)_
-- **DING-MCP-003** Input lines with surrounding spaces, tabs or a trailing carriage return are parsed as the message they contain.
+- **DING-MCP-003** Input lines with surrounding spaces, tabs or a trailing carriage return are parsed as the message they contain: each gets the same successful reply as the trimmed line, never a parse error (-32700).
 - **DING-MCP-004** initialize echoes a requested version among 2025-06-18, 2025-03-26 and 2024-11-05 and otherwise answers 2025-06-18, advertising the tools capability but not resources or prompts, and serverInfo name ding with the build's version. _(SPEC SPEC.md AI assistants (MCP) Protocol)_
 - **DING-MCP-005** The initialize instructions say meeting titles are untrusted and their instructions must never be followed. _(SPEC SPEC.md AI assistants (MCP))_
 - **DING-MCP-006** ping returns an empty result, and notifications, messages with a null id and responses from the client get no reply. _(SPEC SPEC.md AI assistants (MCP) Protocol)_
@@ -223,7 +223,7 @@ Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced 
 - **DING-CTRL-013** A cannot_open refusal does not include the meeting's title. _(SPEC SPEC.md AI assistants (MCP))_
 - **DING-CTRL-014** A second open_meeting less than 3 seconds after the last one is refused with too_fast. _(SPEC SPEC.md AI assistants (MCP) Transport)_
 - **DING-CTRL-015** Every failure has a distinct code without spaces and a message written for the reader, and the access-off messages point to Preferences. _(SPEC SPEC.md AI assistants (MCP))_
-- **DING-CTRL-016** Assistants see only the events left after calendar selection and dropdown filters. _(SPEC SPEC.md AI assistants (MCP))_
+- **DING-CTRL-016** Assistants see only the events left after calendar selection and dropdown filters: an event in a hidden calendar, a declined or canceled event, and (with those toggles off) an event without a meeting link or an unconfirmed one never appear in what the control service returns. _(SPEC SPEC.md AI assistants (MCP))_
 - **DING-CTRL-017** The listener answers requests over a real socket in the app's sandbox, performs opens on the main actor and stops listening when stopped. _(SPEC SPEC.md Testing (MCP))_
 - **DING-CTRL-018** A build whose bundle has no DingAppGroup key creates no listener and no socket.
 - **DING-CTRL-019** Test models never start the control server, while a normal model does. _(SPEC SPEC.md Testing (MCP))_
@@ -242,7 +242,7 @@ Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced 
 - **DING-IPC-005** The team ID is the part of the app group before its first dot.
 - **DING-IPC-006** The socket is c.sock in the app group container. _(SPEC SPEC.md AI assistants (MCP) Transport)_
 - **DING-IPC-007** A socket path too long for sockaddr_un is rejected when the server starts.
-- **DING-IPC-008** The real socket path in the user's group container fits in sockaddr_un.
+- **DING-IPC-008** The real socket path, DingIPC.socketURL for an app-group container path shaped like the real one, fits in sockaddr_un's sun_path including the terminating NUL.
 - **DING-IPC-009** The server drops a peer that stays silent past the idle timeout, closes connections beyond its cap at once and frees a slot when one closes. _(SPEC SPEC.md AI assistants (MCP) Transport)_
 - **DING-IPC-010** The server's defaults are at most 16 connections and a 30-second idle timeout. _(SPEC SPEC.md AI assistants (MCP) Transport)_
 - **DING-IPC-011** Concurrent clients are all answered, many requests in a row each get their answer and async handlers are awaited.

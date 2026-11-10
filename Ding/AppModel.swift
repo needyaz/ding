@@ -88,14 +88,18 @@ final class AppModel {
         }
     }
 
-    private func startControlServer() {
-        let service = ControlService(environment: .init(
+    /// The control service exactly as the app starts it, fed only the events the user chose to see.
+    func makeControlService() -> ControlService {
+        ControlService(environment: .init(
             events: { [weak self] in self?.visibleEvents ?? [] },
             access: { [weak self] in self?.access ?? .notDetermined },
             permissions: { Pref.controlPermissions },
             join: { [weak self] in self?.join($0) }
         ))
-        controlListener = ControlListener(service: service)
+    }
+
+    private func startControlServer() {
+        controlListener = ControlListener(service: makeControlService())
         controlListener?.start()
     }
 

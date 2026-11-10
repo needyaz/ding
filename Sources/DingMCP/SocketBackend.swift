@@ -42,7 +42,7 @@ extension MCPServer {
     public func serve<Lines: AsyncSequence>(lines: Lines, write: (Data) -> Void) async where Lines.Element == String {
         do {
             for try await line in lines {
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { continue }
                 if let reply = await handle(Data(trimmed.utf8)) {
                     write(reply + Data([UInt8(ascii: "\n")]))
