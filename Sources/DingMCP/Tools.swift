@@ -42,7 +42,7 @@ enum Tools {
             [
                 "name": ControlMethod.openMeeting.rawValue,
                 "title": "Open meeting",
-                "description": "Open a meeting in the app or browser the user has chosen in Ding for that service. This acts on the user's computer, so only do it when the user has asked to open a meeting. Does not return the meeting link. The reply confirms it with joined: true, and includes the meeting's details only if the user has also allowed seeing their schedule. Fails for meetings with no link Ding recognizes.",
+                "description": "Open a meeting in the app or browser the user has chosen in Ding for that service. This acts on the user's computer, so only do it when the user has asked to open a meeting. Does not return the meeting link. The reply confirms it with opened: true, and includes the meeting's details only if the user has also allowed seeing their schedule. Fails for meetings with no link Ding recognizes.",
                 "inputSchema": [
                     "type": "object",
                     "properties": [

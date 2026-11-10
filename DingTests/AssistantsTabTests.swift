@@ -44,6 +44,6 @@ final class AssistantsTabTests: IsolatedDefaultsTestCase {
 
     func testControlServerIsNotStartedByTestModels() {
         XCTAssertFalse(AppModel.test().startsControlServer)
-        XCTAssertTrue(AppModel().startsControlServer, "but a normal model starts it")
+        XCTAssertTrue(AppModel(calendar: FakeCalendar(), notifier: FakeNotifier()).startsControlServer, "but a normal model starts it")
     }
 }

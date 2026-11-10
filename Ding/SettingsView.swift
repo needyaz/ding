@@ -186,6 +186,29 @@ struct ServiceOpenPicker: View {
 // MARK: - Alerts
 
 struct AlertsTab: View {
+    /// One section of the tab: its title (nil for an unsectioned row) and the
+    /// labels of its rows, in display order.
+    struct LayoutSection: Equatable {
+        let title: String?
+        let rows: [String]
+    }
+
+    /// The ordered layout the view renders from, readable by tests.
+    static var sections: [LayoutSection] {
+        [
+            LayoutSection(title: nil, rows: [linklessLabel]),
+            LayoutSection(title: "Notification", rows: [
+                "Notify me", "Play a sound", "Show a Join button", unconfirmedLabel,
+            ]),
+            LayoutSection(title: "Screen reminder", rows: [
+                "Style", "Show it", unconfirmedLabel, "Preview",
+            ]),
+        ]
+    }
+
+    private static let linklessLabel = "Remind me about events without a meeting link"
+    private static let unconfirmedLabel = "Also for meetings marked “maybe” or not yet answered"
+
     let model: AppModel
     @AppStorage(Pref.notifyLeadMinutes) private var lead = Pref.Default.notifyLeadMinutes
     @AppStorage(Pref.notifySound) private var sound = Pref.Default.notifySound
@@ -198,40 +221,69 @@ struct AlertsTab: View {
 
     var body: some View {
         Form {
-            Section("Notification") {
-                Picker("Notify me", selection: $lead) {
-                    Text("Off").tag(0)
-                    ForEach(Pref.leadMinuteOptions, id: \.self) { Text("\($0) min before").tag($0) }
-                }
-                Toggle("Play a sound", isOn: $sound)
-                Toggle("Show a Join button", isOn: $joinAction)
-                Toggle("Also for meetings marked “maybe” or not yet answered", isOn: $notifyUnconfirmed)
-            }
-            Section {
-                Picker("Style", selection: $mode) {
-                    Text("None").tag(AlertMode.off)
-                    Text("Flash the screen edges").tag(AlertMode.edgeFlash)
-                    Text("Full-screen alert").tag(AlertMode.fullScreen)
-                }
-                .pickerStyle(.radioGroup)
-                Picker("Show it", selection: $alertLead) {
-                    Text("At the start time").tag(0)
-                    ForEach(Pref.alertLeadOptions.filter { $0 > 0 }, id: \.self) {
-                        Text($0 == 1 ? "1 min before" : "\($0) min before").tag($0)
+            ForEach(Array(Self.sections.enumerated()), id: \.offset) { _, section in
+                if section.title == "Screen reminder" {
+                    Section {
+                        rows(section)
+                    } header: {
+                        Text("Screen reminder")
+                    } footer: {
+                        Text("A bigger reminder on top of the notification, with its own timing. Full screen counts down to the start and shows Join, Snooze and Dismiss. Press Esc to dismiss.")
                     }
+                } else if let title = section.title {
+                    Section(title) { rows(section) }
+                } else {
+                    Section { rows(section) }
                 }
-                .disabled(mode == .off)
-                Toggle("Also for events without a meeting link", isOn: $includeAll)
-                Toggle("Also for meetings marked “maybe” or not yet answered", isOn: $alertUnconfirmed)
-                Button("Preview") { model.previewAlert() }
-                    .disabled(mode == .off)
-            } header: {
-                Text("Screen reminder")
-            } footer: {
-                Text("A bigger reminder on top of the notification, with its own timing. Full screen counts down to the start and shows Join, Snooze and Dismiss. Press Esc to dismiss.")
             }
         }
         .formStyle(.grouped)
+    }
+
+    @ViewBuilder
+    private func rows(_ section: LayoutSection) -> some View {
+        ForEach(section.rows, id: \.self) { label in
+            row(label, screen: section.title == "Screen reminder")
+        }
+    }
+
+    @ViewBuilder
+    private func row(_ label: String, screen: Bool) -> some View {
+        switch label {
+        case Self.linklessLabel:
+            Toggle(label, isOn: $includeAll)
+        case "Notify me":
+            Picker(label, selection: $lead) {
+                Text("Off").tag(0)
+                ForEach(Pref.leadMinuteOptions, id: \.self) { Text("\($0) min before").tag($0) }
+            }
+        case "Play a sound":
+            Toggle(label, isOn: $sound)
+        case "Show a Join button":
+            Toggle(label, isOn: $joinAction)
+        case Self.unconfirmedLabel:
+            Toggle(label, isOn: screen ? $alertUnconfirmed : $notifyUnconfirmed)
+        case "Style":
+            Picker(label, selection: $mode) {
+                Text("None").tag(AlertMode.off)
+                Text("Flash the screen edges").tag(AlertMode.edgeFlash)
+                Text("Full-screen alert").tag(AlertMode.fullScreen)
+            }
+            .pickerStyle(.radioGroup)
+        case "Show it":
+            Picker(label, selection: $alertLead) {
+                Text("At the start time").tag(0)
+                ForEach(Pref.alertLeadOptions.filter { $0 > 0 }, id: \.self) {
+                    Text($0 == 1 ? "1 min before" : "\($0) min before").tag($0)
+                }
+            }
+            .disabled(mode == .off)
+        case "Preview":
+            Button(label) { model.previewAlert() }
+                .disabled(mode == .off)
+        default:
+            EmptyView()
+        }
     }
 }
 

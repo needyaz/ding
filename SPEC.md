@@ -86,8 +86,8 @@ A free, open-source macOS menu bar app that shows your next meeting and lets you
 
 ### Notifications and screen reminders
 
-Two separate things, each with its own timing. (The code calls the second an "alert"; the UI says "screen reminder", because macOS already uses
-"Alerts" for a notification style.) Both live on Preferences' **Notifications** tab.
+Two separate things, each with its own timing. (The code calls the second an "alert"; the Settings section is "Screen reminder" and its
+bolder style is labelled "Full-screen alert".) Both live on Preferences' **Notifications** tab.
 
 - **Notification:** a standard macOS notification N minutes before an event (Off, 1, 2, 5, 10 or 15; default 5), with an optional sound and an
   optional Join button. Clicking the banner or Join opens the link. Body reads "Starts in 5 minutes · Zoom".
@@ -98,7 +98,7 @@ Two separate things, each with its own timing. (The code calls the second an "al
   3. **Full screen** — a takeover with the title, a live line, and Join, Snooze (1 minute) and Dismiss. Esc dismisses. The primary display
      shows the card; other displays are dimmed. The live line counts down before the start ("Starts in 0:59"), then reads "Starting now" and
      "Started 2 min ago".
-- The two times are independent and may coincide. The default is a 5-minute notification followed by a full-screen reminder 1 minute before.
+- The two times are independent and may coincide. The default setup is a 5-minute notification with screen reminder style None.
 - A **Preview** button shows the chosen reminder for a sample meeting that starts when a real one would.
 - Both only fire for timed events with a meeting link by default (setting to include events without one). All-day events never fire.
 - Two settings cover unconfirmed meetings (maybe or not yet answered), one in each section, independent of each other and never affecting accepted
@@ -226,7 +226,7 @@ Anything that touches the system sits behind a small protocol or closure so test
 
 ## Distribution & License
 
-- Free on the Mac App Store; notarized DMG and Homebrew cask possible later.
+- Free on the Mac App Store (live since 2026-11-09). The release tooling covers TestFlight upload, listing, submission and withdrawal, plus a notarized zip on GitHub Releases. A DMG or Homebrew cask is only a possible later option.
 - TestFlight builds are archived and uploaded from the build box only, with `make testflight`, gated by `make/local.mk` like the author's other apps
   (see `DISTRIBUTION.md`). The build number is the git commit count; the marketing version is `1.0.<commit count>`, stamped at archive time (as in Mylo); `MARKETING_VERSION` in `project.yml` only labels dev builds. The app carries a
   privacy manifest declaring its UserDefaults use.
@@ -234,12 +234,12 @@ Anything that touches the system sits behind a small protocol or closure so test
   on all of it, which is what allows the App Store build despite the GPL; no CLA is needed. Issues are welcome.
 - Dependencies are MIT-licensed (KeyboardShortcuts, MenuBarExtraAccess), which is compatible with the GPLv3.
 - The app icon was generated with Midjourney on a paid plan and is not covered by the GPL: the name and artwork are all rights reserved.
-- Before flipping the repo public: enable Issues, restrict who can open pull requests, and skim the history for anything that shouldn't be public.
+- Before the repo was made public, Issues were enabled, who can open pull requests was restricted, and the history was checked.
 
 ## Milestones
 
-Status: 1–5 are implemented and the icon from 6 is done. Remaining: the manual test pass, signing and notarization,
-App Store submission, and flipping the GitHub repo public.
+Status: 1–5 are implemented, the icon from 6 is done, and Ding 1.0 is live on the Mac App Store. Signing, notarization,
+TestFlight, submission and the GitHub Releases zip are built (see `DISTRIBUTION.md`). Remaining: the manual test pass.
 
 1. Skeleton: menu bar item, EventKit permission, next-event countdown.
 2. Dropdown with grouping, color dots, calendar picker.
@@ -266,5 +266,5 @@ App Store submission, and flipping the GitHub repo public.
 - No CI. Tests run locally (`make test`).
 - The MCP server ships **inside the app bundle**, so people get it automatically. No separate install, and no command-line tool unless one is
   explicitly wanted.
-- The GitHub repo (`needyaz/ding`) is **private** for now and will be flipped public later. Until then the Send Feedback link and the
-  issues link in `CONTRIBUTING.md` aren't reachable by anyone else.
+- The GitHub repo (`needyaz/ding`) is **public**, so the Send Feedback link and the
+  issues link in `CONTRIBUTING.md` are reachable by everyone, and README.md can send users to its GitHub Releases.

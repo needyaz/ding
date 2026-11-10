@@ -21,7 +21,7 @@ code or tests, nothing was resolved here: see `spec/DRIFT_REPORT.md`. Proposed g
 in `spec/TEST_LANES.md`.
 
 <!-- BEGIN GENERATED: counts -->
-Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced behavior 5, Conflict 7, Not implemented 3, Retired 0.
+Counts: 232 requirements — Confirmed 156, Implemented, untested 69, Unspecced behavior 4, Conflict 0, Not implemented 2, Retired 1.
 <!-- END GENERATED: counts -->
 
 <!-- BEGIN GENERATED: requirements -->
@@ -141,9 +141,10 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 - **DING-NOTIF-010** Notifications show as banners with sound even while Ding is frontmost, with a Join action category, and Ding asks for alert and sound permission.
 - **DING-NOTIF-011** At most 50 notifications are planned at once, soonest first. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-012** The screen reminder style is None, Flash the screen edges or Full screen, None by default, and an unknown stored value reads as None. _(SPEC SPEC.md Notifications and screen reminders)_
-- **DING-NOTIF-013** **[Conflict]** The default reminder setup is a notification 5 minutes before with no screen reminder. _(SPEC SPEC.md Notifications and screen reminders lines 94 and 99)_
+- **DING-NOTIF-013** A fresh install notifies 5 minutes before each meeting and has the screen reminder style None, as shipped. SPEC.md says so in one place, with no contradicting line. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-014** The screen reminder fires at the start or 1, 2 or 5 minutes before, 1 by default, independently of the notification's time, and the two may coincide. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-015** By default only timed events with a meeting link get a notification or screen reminder, one setting includes events without a link for both, and all-day events never get either. _(SPEC SPEC.md Notifications and screen reminders)_
+- **DING-NOTIF-016** One switch decides whether events without a meeting link get reminders, for both notifications and the screen reminder. It sits in the Reminders settings above both sections (not inside the Screen reminder section), labelled "Remind me about events without a meeting link". Its stored key and existing value carry over. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-017** Maybe and not-responded meetings get notifications by default and screen reminders only when that separate setting is on, and neither setting affects accepted meetings. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-018** A notification or screen reminder whose time has already passed is not planned, even before the meeting starts, so a meeting created inside the lead time gets none. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-019** A screen reminder that comes due more than 2 minutes late, as after sleep, is dropped, and a timer up to 0.5 s early still shows it. _(SPEC SPEC.md Notifications and screen reminders)_
@@ -154,7 +155,7 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 - **DING-NOTIF-024** Snooze hides the takeover and shows it again after 60 seconds, and Join opens the link and dismisses it. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-025** The live line reads 'Starts in M:SS' before the start, 'Starting now' for the first 5 seconds, 'Started Ns ago' until a minute and then 'Started N min ago'. _(SPEC SPEC.md Notifications and screen reminders)_
 - **DING-NOTIF-026** Preview shows the chosen style for a sample linked meeting, 'Preview: Team standup', that starts as far ahead as the chosen screen-reminder timing. _(SPEC SPEC.md Notifications and screen reminders)_
-- **DING-NOTIF-028** **[Conflict]** The UI calls the bolder reminder a 'screen reminder' and not an 'alert'. _(SPEC SPEC.md Notifications and screen reminders line 87)_
+- **DING-NOTIF-028** The bolder reminder style is labelled "Full-screen alert" in Settings. SPEC.md no longer carries the rule that the UI must say "screen reminder" for it. _(SPEC SPEC.md Notifications and screen reminders)_
 
 ## Hotkeys
 
@@ -202,7 +203,7 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 - **DING-MCP-016** When Ding is not running, or only a stale socket file is left, the handshake and tool list still work and a tool call answers 'Ding isn't running'. _(SPEC SPEC.md AI assistants (MCP); SPEC.md Known limitations)_
 - **DING-MCP-017** A timeout, a connection Ding closes, an unreadable reply and any other backend error each come back as a tool error saying what happened.
 - **DING-MCP-018** Titles with newlines, quotes or line separators are passed through unchanged but escaped, so each reply stays on one line. _(SPEC SPEC.md AI assistants (MCP))_
-- **DING-MCP-019** **[Conflict]** open_meeting confirms success with the field opened set to true. _(SPEC SPEC.md AI assistants (MCP); Sources/DingMCP/Tools.swift open_meeting description)_
+- **DING-MCP-019** The open_meeting tool description sent to MCP clients names the reply field the app actually returns (opened: true), and a test fails if the description names a field the reply does not carry. _(SPEC SPEC.md AI assistants (MCP); Sources/DingMCP/Tools.swift open_meeting description)_
 - **DING-MCP-021** The helper reports its own CFBundleShortVersionString as the server version and waits up to 10 seconds for Ding.
 
 ## AI assistants: control service and permissions
@@ -261,7 +262,7 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 
 ## Testing
 
-- **DING-TEST-001** **[Conflict]** No test touches the real system: the notification center, browsers and workspace, EventKit, login items and windows all sit behind fakes. _(SPEC SPEC.md Testing)_
+- **DING-TEST-001** No app-hosted test constructs the real AppModel() or otherwise installs a delegate or categories on the real UNUserNotificationCenter. "testControlServerIsNotStartedByTestModels" checks the same thing through a model built with fakes. _(SPEC SPEC.md Testing)_
 - **DING-TEST-002** App tests read and write an isolated UserDefaults suite, never the user's preferences. _(SPEC SPEC.md Testing; DingTests/TestSupport.swift comment)_
 - **DING-TEST-004** make coverage prints line coverage for DingCore and for the app. _(SPEC SPEC.md Testing)_
 
@@ -276,7 +277,7 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 ## Release and distribution
 
 - **DING-REL-001** The release targets exist only on a machine whose make/local.mk declares BOX_NAME := prod-build. _(SPEC DISTRIBUTION.md; SPEC.md Distribution & License)_
-- **DING-REL-002** **[Conflict]** The release preflight requires git, xcodebuild and xcodegen on PATH plus the three ASC_* variables. _(SPEC DISTRIBUTION.md What make testflight does step 1)_
+- **DING-REL-002** DISTRIBUTION.md lists the release preflight's required tools exactly as make/store.mk defines them (git, xcodebuild, xcodegen, deno). _(SPEC DISTRIBUTION.md What make testflight does step 1)_
 - **DING-REL-003** A release refuses a dirty working tree and then runs git pull --ff-only. _(SPEC DISTRIBUTION.md What make testflight does step 2)_
 - **DING-REL-004** The build number is the git commit count and the marketing version is 1.0.<commit count>, stamped into the app and the helper at archive time. _(SPEC DISTRIBUTION.md; SPEC.md Distribution & License)_
 - **DING-REL-005** The duplicate-build check calls a build number REUSE when valid or processing, BURNED when failed, invalid or expired and ABSENT otherwise, comparing numbers as exact strings. _(SPEC DISTRIBUTION.md One command: make release step 1)_
@@ -292,19 +293,19 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 - **DING-REL-016** make withdraw takes back the version waiting for App Review, and DRY=1 previews it. _(SPEC DISTRIBUTION.md; SPEC.md Build & tooling)_
 - **DING-REL-017** make github-release builds a Developer ID-signed, notarized, stapled and Gatekeeper-checked zip and attaches it to GitHub Release v<VERSION>, separately from make release. _(SPEC DISTRIBUTION.md Downloads outside the App Store; SPEC.md Build & tooling)_
 - **DING-REL-018** make beta promotes the current build to the public TestFlight beta. _(SPEC DISTRIBUTION.md)_
-- **DING-REL-019** **[Conflict]** Signing, notarization and App Store submission are not yet built, and a notarized DMG is only a possible later option. _(SPEC SPEC.md Milestones; SPEC.md Distribution & License line 227)_
+- **DING-REL-019** SPEC.md's Milestones and Distribution sections describe the release tooling that exists: TestFlight upload, listing, submission, withdrawal, and a notarized zip on GitHub Releases. Ding is live on the Mac App Store (since 2026-11-09). A DMG or Homebrew cask is only a possible later option. _(SPEC SPEC.md Milestones; SPEC.md Distribution & License)_
+- **DING-REL-020** README.md says Ding is on the Mac App Store and links its listing (https://apps.apple.com/app/id6829270522?mt=12) as the way to install it and get updates. Building your own copy and the notarized GitHub Releases download stay as alternatives. _(SPEC README.md Install)_
 
 ## Project decisions and process
 
 - **DING-PROC-001** There is no CI, and tests run locally with make test. _(SPEC SPEC.md Decisions; SPEC.md Testing; README.md Building)_
 - **DING-PROC-002** Outside code contributions are not accepted, and issues are welcome. _(SPEC CONTRIBUTING.md; SPEC.md Non-goals (v1))_
 - **DING-PROC-003** The code is GPLv3, while the Ding name and the icon artwork are not covered by it. _(SPEC SPEC.md Distribution & License; README.md License)_
-- **DING-PROC-005** **[Conflict]** The GitHub repository is private for now. _(SPEC SPEC.md Decisions line 267; README.md Requirements line 21)_
+- **DING-PROC-005** SPEC.md's Decisions section says the GitHub repository is public (as it is: needyaz/ding), consistent with README.md sending users to GitHub Releases. _(SPEC SPEC.md Decisions)_
 - **DING-PROC-006** The App Store name is 'Ding: Meeting Countdown' and the app is called Ding everywhere else. _(SPEC SPEC.md Decisions)_
 
 ## Built, not in the old spec
 
-- **DING-NOTIF-016** **[Unspecced behavior]** The single 'Also for events without a meeting link' switch is shown only in the Screen reminder section but also gives linkless events notifications.
 - **DING-NOTIF-027** **[Unspecced behavior]** The Preview button and the screen reminder timing picker are disabled while the style is None.
 - **DING-REFRESH-006** **[Unspecced behavior]** When hosted by XCTest, or started with --screenshots in a debug build, the app never starts the model, so it asks for nothing and schedules nothing.
 - **DING-MCP-020** **[Unspecced behavior]** The helper exits with status 1 and a message on stderr when its bundle has no app group, and writes nothing but protocol messages to stdout.
@@ -312,17 +313,11 @@ Counts: 231 requirements — Confirmed 147, Implemented, untested 69, Unspecced 
 <!-- END GENERATED: requirements -->
 
 <!-- BEGIN GENERATED: conflicts -->
-- **DING-NOTIF-013** — see DRIFT_REPORT; The default reminder setup is a notification 5 minutes before with no screen reminder.
-- **DING-NOTIF-028** — see DRIFT_REPORT; The UI calls the bolder reminder a 'screen reminder' and not an 'alert'.
-- **DING-MCP-019** — see DRIFT_REPORT; open_meeting confirms success with the field opened set to true.
-- **DING-TEST-001** — see DRIFT_REPORT; No test touches the real system: the notification center, browsers and workspace, EventKit, login items and windows all sit behind fakes.
-- **DING-REL-002** — see DRIFT_REPORT; The release preflight requires git, xcodebuild and xcodegen on PATH plus the three ASC_* variables.
-- **DING-REL-019** — see DRIFT_REPORT; Signing, notarization and App Store submission are not yet built, and a notarized DMG is only a possible later option.
-- **DING-PROC-005** — see DRIFT_REPORT; The GitHub repository is private for now.
+None open.
 <!-- END GENERATED: conflicts -->
 
 <!-- BEGIN GENERATED: planned -->
 - **DING-TEST-003** A manual pass on a real Mac (iCloud, Google and Exchange accounts, sleep and wake, time zone and DST changes, several displays, notifications and hotkeys) has been done. _(SPEC SPEC.md Testing; SPEC.md Milestones; README.md Status)_
-- **DING-REL-010** The listing check rejects trademarked terms in the keywords. _(SPEC listing/README.md Text)_
+- **DING-REL-010** _Retired:_ no trademarked-keyword check is promised, and listing/README.md no longer claims one. _(SPEC listing/README.md Text)_
 - **DING-PROC-004** The spec is updated in the same change as any behavior change. _(SPEC SPEC.md Decisions)_
 <!-- END GENERATED: planned -->

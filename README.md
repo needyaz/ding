@@ -18,7 +18,7 @@ Ding reads the calendars already set up on your Mac (iCloud, Google, Exchange) t
 
 macOS 14 Sonoma or later.
 
-Ding is coming to the Mac App Store, free, which will keep it up to date. Until then you can build it yourself (below). Notarized builds for download are attached to the [GitHub Releases](../../releases) and don't update themselves.
+Ding is on the [Mac App Store](https://apps.apple.com/app/id6829270522?mt=12), free, which is the way to install it and keep it up to date. You can also build it yourself (below). Notarized builds for download are attached to the [GitHub Releases](../../releases) and don't update themselves.
 
 ## Building
 
@@ -67,7 +67,7 @@ Anything that would touch the real system (notification center, browsers, window
 
 ## Status
 
-Feature-complete for v1 and pending a manual test pass. See [SPEC.md](SPEC.md) for the plan.
+Ding 1.0 is live on the Mac App Store; a manual test pass is still pending. See [SPEC.md](SPEC.md) for the plan.
 
 ## Contributing
 

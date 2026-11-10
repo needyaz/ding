@@ -6,13 +6,13 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 
 | Status | Count |
 |---|---|
-| Confirmed | 147 |
+| Confirmed | 156 |
 | Implemented, untested | 69 |
-| Unspecced behavior | 5 |
-| Conflict | 7 |
-| Not implemented | 3 |
-| Retired | 0 |
-| **Total** | **231** |
+| Unspecced behavior | 4 |
+| Conflict | 0 |
+| Not implemented | 2 |
+| Retired | 1 |
+| **Total** | **232** |
 
 | ID | Status | SPEC | Evidence |
 |---|---|---|---|
@@ -112,10 +112,10 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-NOTIF-010 | Confirmed | - | DingTests/NotificationRequestTests.swift "testNotificationsShowAsBannersWithSoundEvenWhenDingIsFrontmost"; DingTests/UserNotificationSchedulerTests.swift "testInstallsItselfAsDelegateWithAJoinCategory" "testRequestsAlertAndSoundPermission" |
 | DING-NOTIF-011 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/AlertPlannerTests.swift "testPlanIsSortedAndCapped" asserts 50 of 80 and the first is the earliest |
 | DING-NOTIF-012 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/AlertPlannerTests.swift "testAlertModeIDs"; DingTests/PreferencesTests.swift "testRegisteredDefaults" "testHotkeysAndAlertsAreOffByDefault" "testUnknownAlertModeFallsBackToOff" |
-| DING-NOTIF-013 | Conflict | SPEC.md Notifications and screen reminders lines 94 and 99 | SPEC.md line 94 says None is the default style and Ding/Preferences.swift Pref.Default.alertMode is off (DingTests/PreferencesTests.swift "testRegisteredDefaults" asserts off), but SPEC.md line 99 says the default is a 5-minute notification followed by a full-screen reminder 1 minute before; left open |
+| DING-NOTIF-013 | Confirmed | SPEC.md Notifications and screen reminders | DingTests/PreferencesTests.swift "testRegisteredDefaults"; DingTests/added/SettledSpecConflictsTests.swift test_DING_NOTIF_013_keeps_aFreshInstallNotifiesFiveMinutesBeforeWithNoScreenReminder |
 | DING-NOTIF-014 | Confirmed | SPEC.md Notifications and screen reminders | DingTests/PreferencesTests.swift "testAlertLeadOptionsStartAtTheStartTime" "testAlertTimingDefaultsToOneMinuteBeforeAndIsIndependentOfTheNotification"; Tests/DingCoreTests/AlertPlannerTests.swift "testAlertFiresTheConfiguredMinutesBeforeStart" "testNotificationAndAlertTimesAreIndependent" "testNotificationAndAlertCanFireTogether" "testNegativeAlertLeadMeansAtStart" |
 | DING-NOTIF-015 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/AlertPlannerTests.swift "testPlanOnlyEventsWithLinkByDefault" "testPlanIgnoresAllDayAndHonorsOffSettings"; DingTests/SchedulerTests.swift "testEventsWithoutLinksDoNotAlertByDefault" "testNoNotificationsWhenLeadIsZeroOrEventHasNoLink" |
-| DING-NOTIF-016 | Unspecced behavior | - | none: Ding/SettingsView.swift AlertsTab places it under Screen reminder; AlertPlanner applies includeEventsWithoutLink to both kinds |
+| DING-NOTIF-016 | Confirmed | SPEC.md Notifications and screen reminders | DingTests/added/SettledSpecConflictsTests.swift test_DING_NOTIF_016_theLinklessSwitchComesBeforeBothReminderSections, test_DING_NOTIF_016_theScreenReminderSectionNoLongerHoldsTheSwitch, test_DING_NOTIF_016_keeps_theStoredChoiceCarriesOver |
 | DING-NOTIF-017 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/AlertPlannerTests.swift "testUnconfirmedMeetingsGetNotificationsButNoScreenReminderByDefault" "testEachUnconfirmedSettingIsIndependent" "testAcceptedMeetingsAreNeverAffectedByTheUnconfirmedSettings"; DingTests/PreferencesTests.swift "testUnconfirmedMeetingsNotifyButDoNotTakeOverTheScreenByDefault" |
 | DING-NOTIF-018 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/AlertPlannerTests.swift "testPlanSkipsPastFireDates" "testAnAlertWhoseTimeHasPassedIsNotReplannedBeforeTheStart" |
 | DING-NOTIF-019 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/AlertPlannerTests.swift "testPopDueDropsStaleAlertsButStillRemovesThem" "testPopDueKeepsAlertsJustInsideTheStaleWindow" "testPopDueFiresSlightlyEarlyTimers" "testPopDueReturnsOnlyDueAlerts" "testPopDueHandlesSimultaneousAlerts"; macOS notifications are not subject to this rule |
@@ -127,7 +127,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-NOTIF-025 | Confirmed | SPEC.md Notifications and screen reminders | Tests/DingCoreTests/EventDisplayTests.swift "testAlertStatusBeforeTheStartCountsDown" "testAlertStatusAfterTheStart"; the 'Started Ns ago' stage is not in the documents |
 | DING-NOTIF-026 | Confirmed | SPEC.md Notifications and screen reminders | DingTests/AppModelLifecycleTests.swift "testPreviewShowsTheConfiguredAlertForASampleMeeting" "testPreviewStartsWhereTheConfiguredLeadPutsTheCountdown" "testPreviewAtStartTimeStartsNow" "testPreviewUsesWhateverModeIsSet" |
 | DING-NOTIF-027 | Unspecced behavior | - | none: Ding/SettingsView.swift AlertsTab |
-| DING-NOTIF-028 | Conflict | SPEC.md Notifications and screen reminders line 87 | SPEC.md line 87 says the UI says screen reminder because macOS uses Alerts for a notification style, but Ding/SettingsView.swift line 214 labels the style 'Full-screen alert'; left open |
+| DING-NOTIF-028 | Confirmed | SPEC.md Notifications and screen reminders | scripts/spec_settled_docs_test.ts "DING-NOTIF-028"; Ding/SettingsView.swift Style picker label |
 | DING-HOTKEY-001 | Implemented, untested | SPEC.md Hotkeys | DingTests/PreferencesTests.swift "testHotkeysAndAlertsAreOffByDefault" asserts nothing about hotkeys despite its name; DingTests/SettingsTabTests.swift only renders ShortcutsTab |
 | DING-HOTKEY-002 | Confirmed | SPEC.md Hotkeys | Tests/DingCoreTests/NextEventTests.swift "testJoinCandidateSkipsEventsWithoutLinks" "testJoinCandidateIncludesRecentlyStartedMeeting" "testJoinCandidateGivesUpOnMeetingsStartedLongAgo" "testJoinCandidateNilWithNothingToJoin"; DingTests/AppModelLifecycleTests.swift "testJoinNextOpensTheNextLinkedMeeting" "testJoinNextCatchesAMeetingThatJustStarted" "testJoinNextWithNothingToJoin" "testJoinNextRespectsHiddenCalendars" |
 | DING-HOTKEY-003 | Implemented, untested | SPEC.md Hotkeys; SPEC.md Platform & Stack | none: AppModel.registerHotkeys |
@@ -164,7 +164,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-MCP-016 | Confirmed | SPEC.md AI assistants (MCP); SPEC.md Known limitations | Tests/DingMCPTests/MCPServerTests.swift "testTheHandshakeNeverNeedsDing" "testDingNotRunningIsAHelpfulToolError"; Tests/DingMCPTests/EndToEndTests.swift "testDingNotRunning" "testTheServerSurvivesTheAppGoingAwayBetweenCalls"; Tests/DingIPCTests/SocketTests.swift "testAStaleSocketFileNobodyListensOnIsTheSameAsNotRunning" |
 | DING-MCP-017 | Confirmed | - | Tests/DingMCPTests/EndToEndTests.swift "testDingHangingTimesOut" "testDingRefusingThisProgramIsExplained" "testAGarbledReplyIsReportedNotCrashed" "testAnEmptyReplyIsReportedNotCrashed"; Tests/DingMCPTests/MCPServerTests.swift "testOtherBackendErrorsAreReportedNotHidden" "testAnUnexpectedErrorTypeStillBecomesAToolError" |
 | DING-MCP-018 | Confirmed | SPEC.md AI assistants (MCP) | Tests/DingMCPTests/MCPServerTests.swift "testTitlesWithNewlinesAndQuotesStayOnOneLine" |
-| DING-MCP-019 | Conflict | SPEC.md AI assistants (MCP); Sources/DingMCP/Tools.swift open_meeting description | Ding/ControlService.swift returns opened true and DingTests/ControlServiceTests.swift "testJoinWithoutAnIDJoinsTheNextLinkedMeeting" asserts it, matching SPEC.md line 142, but the tool description sent to every client (Sources/DingMCP/Tools.swift line 45) says the reply confirms it with joined: true; left open |
+| DING-MCP-019 | Confirmed | SPEC.md AI assistants (MCP); Sources/DingMCP/Tools.swift open_meeting description | Tests/DingMCPTests/added/OpenMeetingDescriptionTests.swift test_DING_MCP_019_theOpenMeetingDescriptionNamesOnlyFieldsTheReplyCarries |
 | DING-MCP-020 | Unspecced behavior | - | none: DingMCPHelper/main.swift |
 | DING-MCP-021 | Implemented, untested | - | none: DingMCPHelper/main.swift and SocketBackend default timeout |
 | DING-CTRL-001 | Confirmed | SPEC.md AI assistants (MCP) Off by default | DingTests/PreferencesTests.swift "testAssistantAccessIsOffUntilTheUserTurnsItOn" "testAssistantPermissionsAreReadLiveAndIndependently"; DingTests/ControlServiceTests.swift "testNothingIsAllowedByDefault" "testTurningAPermissionOffTakesEffectOnTheNextRequest"; Tests/DingCoreTests/ControlTests.swift "testPermissionsDefaultToOff" |
@@ -212,7 +212,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-SHOTS-004 | Confirmed | listing/README.md Screenshots | DingTests/ScreenshotTests.swift "testScreenshotPreferencesNeverTouchTheRealOnes" |
 | DING-SHOTS-005 | Implemented, untested | listing/README.md Screenshots | none: Ding/Screenshots/ScreenshotMode.swift; DingTests/ScreenshotTests.swift "testTheFullScreenViewCanShowAFixedMoment" asserts only a stored property |
 | DING-SHOTS-006 | Implemented, untested | listing/README.md Screenshots | none: Makefile screenshots target |
-| DING-TEST-001 | Conflict | SPEC.md Testing | SPEC.md line 220 says so, but DingTests/AssistantsTabTests.swift "testControlServerIsNotStartedByTestModels" builds AppModel(), whose real UserNotificationScheduler installs a delegate and categories on the real notification center; DingTests/CalendarStoreTests.swift CalendarStoreTests uses the real EventKit store; DingTests/SystemWorkspaceTests.swift queries Launch Services; left open |
+| DING-TEST-001 | Confirmed | SPEC.md Testing | DingTests/AssistantsTabTests.swift "testControlServerIsNotStartedByTestModels"; DingTests/added/SettledSpecConflictsTests.swift test_DING_TEST_001_keeps_aModelBuiltWithFakesStartsTheControlServerUnlessATestTurnsItOff |
 | DING-TEST-002 | Implemented, untested | SPEC.md Testing; DingTests/TestSupport.swift comment | none: IsolatedDefaultsTestCase is a fixture, not an assertion; DingTests/PreferencesTests.swift "testDefaultClockMatchesTheSystemLocale" creates a suite it never removes |
 | DING-TEST-003 | Not implemented | SPEC.md Testing; SPEC.md Milestones; README.md Status | none: SPEC and README both say it is still pending |
 | DING-TEST-004 | Implemented, untested | SPEC.md Testing | none: Makefile coverage target, which hard-codes an arm64 build path; the 99.6 and 93 percent figures in SPEC are not checked anywhere |
@@ -223,7 +223,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-BUILD-005 | Implemented, untested | SPEC.md Build & tooling | none |
 | DING-BUILD-006 | Unspecced behavior | - | none: Makefile Utilities and Build targets |
 | DING-REL-001 | Implemented, untested | DISTRIBUTION.md; SPEC.md Distribution & License | none: Makefile include guard around make/store.mk |
-| DING-REL-002 | Conflict | DISTRIBUTION.md What make testflight does step 1 | DISTRIBUTION.md line 14 lists git, xcodebuild and xcodegen, but make/store.mk line 22 sets RELEASE_TOOLS to git xcodebuild xcodegen deno, so a box without deno fails preflight; left open |
+| DING-REL-002 | Confirmed | DISTRIBUTION.md What make testflight does step 1 | DISTRIBUTION.md line 14; scripts/spec_settled_docs_test.ts "DING-REL-002" |
 | DING-REL-003 | Implemented, untested | DISTRIBUTION.md What make testflight does step 2 | none: make/store.mk pull target |
 | DING-REL-004 | Implemented, untested | DISTRIBUTION.md; SPEC.md Distribution & License | none: make/store.mk _build-upload and project.yml |
 | DING-REL-005 | Confirmed | DISTRIBUTION.md One command: make release step 1 | scripts/asc_build_check_test.ts "no build with that number is ABSENT: build and upload as usual" "a VALID or still-PROCESSING build with that number is REUSE: skip build and upload" "a FAILED, INVALID or expired build with that number is BURNED: needs a new commit" "build numbers compare as exact strings: 12 is not 121" |
@@ -231,7 +231,7 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-REL-007 | Confirmed | DISTRIBUTION.md One command: make release step 0 | scripts/listing_metadata_test.ts "a new version is blocked while one is with App Review"; that make release runs this gate before building is not asserted |
 | DING-REL-008 | Confirmed | DISTRIBUTION.md One command: make release step 3 | scripts/listing_metadata_test.ts "the editable version is made to carry exactly the stamped version" |
 | DING-REL-009 | Confirmed | listing/README.md Text; DISTRIBUTION.md | scripts/listing_metadata_test.ts "the committed listing is valid" "validate enforces Apple's character limits" "validate counts characters, not UTF-16 units" "validate rejects unknown or empty fields, bad URLs and padded keywords" "version attributes are validated and diffed like the rest" |
-| DING-REL-010 | Not implemented | listing/README.md Text | none: scripts/listing_metadata.ts validate only checks lengths, URLs and spaces around commas |
+| DING-REL-010 | Retired | listing/README.md Text | scripts/spec_settled_docs_test.ts "DING-REL-010"; scripts/listing_metadata.ts unchanged |
 | DING-REL-011 | Confirmed | listing/README.md; DISTRIBUTION.md | scripts/listing_metadata_test.ts "computeDiff looks only at the fields the file mentions" "computeDiff reports a locale the store lacks as differences from empty" "computeDiff covers review notes and finds nothing when everything matches" "only promotional text on an existing locale can change without an editable version" |
 | DING-REL-012 | Confirmed | DISTRIBUTION.md App Review contact | scripts/listing_metadata_test.ts "the review contact comes from the environment and only when set" |
 | DING-REL-013 | Confirmed | listing/README.md Screenshots; DISTRIBUTION.md | scripts/listing_screenshots_test.ts "an identical, fully processed set matches" "any difference replaces the whole set, because order comes from upload order" "a missing, extra, reordered or still-processing screenshot is a difference" "Mac sizes are the four Apple lists" "validateSet flags wrong sizes, mixed sizes and more than ten" "imageSize reads a PNG header" "the committed screenshots are all one valid Mac size" |
@@ -240,10 +240,11 @@ Requirement → status → evidence. Evidence paths are relative to the reposito
 | DING-REL-016 | Implemented, untested | DISTRIBUTION.md; SPEC.md Build & tooling | none: make/store.mk withdraw and scripts/submit.ts |
 | DING-REL-017 | Implemented, untested | DISTRIBUTION.md Downloads outside the App Store; SPEC.md Build & tooling | none: make/store.mk github-release and scripts/direct_release.sh; DISTRIBUTION says it is untested |
 | DING-REL-018 | Implemented, untested | DISTRIBUTION.md | none: scripts/asc_promote_beta.ts |
-| DING-REL-019 | Conflict | SPEC.md Milestones; SPEC.md Distribution & License line 227 | SPEC.md lines 239 to 240 and 227 say so, but make/store.mk and scripts/ implement TestFlight upload, submission, withdrawal and a notarized zip on GitHub Releases (DISTRIBUTION.md), and README.md line 21 points users at those builds; left open |
+| DING-REL-019 | Confirmed | SPEC.md Milestones; SPEC.md Distribution & License | scripts/spec_settled_docs_test.ts "DING-REL-019"; SPEC.md Milestones and Distribution & License |
+| DING-REL-020 | Confirmed | README.md Install | README.md line 21 (install paragraph); scripts/spec_settled_docs_test.ts "DING-REL-020" |
 | DING-PROC-001 | Implemented, untested | SPEC.md Decisions; SPEC.md Testing; README.md Building | none: the repository has no CI configuration |
 | DING-PROC-002 | Implemented, untested | CONTRIBUTING.md; SPEC.md Non-goals (v1) | none: policy text only |
 | DING-PROC-003 | Implemented, untested | SPEC.md Distribution & License; README.md License | none: LICENSE file present |
 | DING-PROC-004 | Not implemented | SPEC.md Decisions | none: no gate enforces it, and DRIFT_REPORT.md lists places where SPEC.md and the code disagree |
-| DING-PROC-005 | Conflict | SPEC.md Decisions line 267; README.md Requirements line 21 | SPEC.md line 267 says the repository is private and the Send Feedback link reaches nobody else, but README.md line 21 sends users to the GitHub Releases for notarized downloads; the repository's visibility cannot be checked from here; left open |
+| DING-PROC-005 | Confirmed | SPEC.md Decisions | scripts/spec_settled_docs_test.ts "DING-PROC-005"; SPEC.md Decisions |
 | DING-PROC-006 | Implemented, untested | SPEC.md Decisions | scripts/listing_metadata_test.ts "the committed listing is valid" asserts the store name; the in-app name is only in Info.plist CFBundleDisplayName, so the whole statement is not asserted |

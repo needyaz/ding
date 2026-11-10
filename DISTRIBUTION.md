@@ -11,7 +11,7 @@ On any other machine that target does not exist (`No rule to make target`): `mak
 
 ## What `make testflight` does
 
-1. **Preflight:** `git`, `xcodebuild` and `xcodegen` are on PATH, and `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_FILEPATH` are set.
+1. **Preflight:** `git`, `xcodebuild`, `xcodegen` and `deno` are on PATH, and `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_FILEPATH` are set.
 2. **`pull`:** refuses a dirty working tree, then `git pull --ff-only`. The build number is the commit count, so uncommitted
    work would ship under a number that matches no commit.
 3. **Archive:** `xcodebuild archive` in Release, with `CURRENT_PROJECT_VERSION` set to `git rev-list --count HEAD`. The app and its

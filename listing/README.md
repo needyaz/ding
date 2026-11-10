@@ -9,7 +9,7 @@ is never touched. The review contact comes from the build box's environment, not
 ## Text
 
 Edit `metadata.json`, then `make listing-check` (offline) validates Apple's limits: 30 characters for the name and subtitle, 100 for
-keywords, 170 for promotional text, 4000 for the description. Keywords carry no trademarked terms and no spaces after commas.
+keywords, 170 for promotional text, 4000 for the description. Keywords carry no spaces after commas.
 
 ## Screenshots
 
