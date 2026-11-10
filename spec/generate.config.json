@@ -1,0 +1,24 @@
+{
+  "prefix": "DING",
+  "areas": {
+    "PLAT": "Platform, packaging and privacy",
+    "MENUBAR": "Menu bar item",
+    "DROPDOWN": "Dropdown",
+    "CAL": "Calendar access and selection",
+    "LINK": "Link detection",
+    "JOIN": "Joining meetings",
+    "NOTIF": "Notifications and screen reminders",
+    "HOTKEY": "Hotkeys",
+    "PREFS": "Preferences",
+    "REFRESH": "Refresh and lifecycle",
+    "MCP": "AI assistants: MCP helper",
+    "CTRL": "AI assistants: control service and permissions",
+    "IPC": "App-helper socket transport",
+    "SHOTS": "Screenshot mode",
+    "TEST": "Testing",
+    "BUILD": "Build tooling",
+    "REL": "Release and distribution",
+    "PROC": "Project decisions and process"
+  },
+  "evidence_note": "Evidence paths are relative to the repository root: Tests/ holds the swift test suites for DingCore, DingIPC and DingMCP, DingTests/ the app-hosted XCTest suites, and scripts/*_test.ts the Deno tests for the release tooling."
+}

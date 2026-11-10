@@ -1,5 +1,7 @@
 # Ding — Spec
 
+> The living baseline spec is in [`spec/`](spec/BASELINE.md) (requirements in `spec/requirements.tsv`); where this document disagrees, see `spec/DRIFT_REPORT.md`.
+
 A free, open-source macOS menu bar app that shows your next meeting and lets you join it in one click. A spiritual replacement for the abandoned "Meeter".
 
 ## Goals
