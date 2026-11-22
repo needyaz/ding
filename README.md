@@ -63,11 +63,11 @@ Releases to TestFlight are built on a separate build box: see [DISTRIBUTION.md](
 | `design/` | Icon source art and `make_icon.py`, which builds the asset catalog's icon set. |
 | `project.yml` | XcodeGen spec; `Ding.xcodeproj` is generated and not checked in. |
 
-Anything that would touch the real system (notification center, browsers, windows, EventKit, login items) sits behind a small protocol or closure, so tests use fakes and never reach your real data. See [SPEC.md](SPEC.md) for the architecture.
+Anything that would touch the real system (notification center, browsers, windows, EventKit, login items) sits behind a small protocol or closure, so tests use fakes and never reach your real data.
 
 ## Status
 
-Ding 1.0 is live on the Mac App Store; a manual test pass is still pending. See [SPEC.md](SPEC.md) for the plan.
+Ding 1.0 is live on the Mac App Store; a manual test pass is still pending.
 
 ## Contributing
 
