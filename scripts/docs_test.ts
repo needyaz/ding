@@ -42,3 +42,21 @@ Deno.test("the listing text section says keywords carry no spaces after commas",
   assert(text.includes("Keywords carry no spaces after commas"));
   assertEquals(text.includes("100 for keywords"), true);
 });
+
+Deno.test("targets reachable from `test` never quit, reset or delete the installed Ding", async () => {
+  const out = await new Deno.Command("make", { args: ["-n", "--no-print-directory", "test"], stdout: "piped", stderr: "piped" }).output();
+  const text = new TextDecoder().decode(out.stdout);
+  assert(out.success, new TextDecoder().decode(out.stderr));
+  const risky = /\b(pkill|killall|tccutil|rm)\b/;
+  const touchesReal = /blue\.luci\.Ding(?!\.dev)|\b(pkill|killall)\b[^\n]*[ "']Ding(?![ \w.-]*Dev)|\/Ding\.app/;
+  const offenders = text.split("\n").filter((l) => risky.test(l) && touchesReal.test(l));
+  assertEquals(offenders, []);
+  assert(text.includes("blue.luci.Ding.dev"), "the test build must use the dev bundle id");
+});
+
+Deno.test("the Makefile keeps the real bundle id for release builds and `test` does not depend on stop", async () => {
+  const mk = await read("Makefile");
+  assert(/^BUNDLE_ID \?= blue\.luci\.Ding$/m.test(mk));
+  assertFalse(/^test:.*\bstop\b(?!-)/m.test(mk));
+  assertFalse(/^test-app:.*\bstop\b(?!-)/m.test(mk));
+});

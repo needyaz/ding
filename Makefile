@@ -5,6 +5,9 @@
 
 APP_NAME  := Ding
 BUNDLE_ID ?= blue.luci.Ding
+# Test builds use a separate dev app so running the checks never launches, quits or resets the installed Ding.
+DEV_APP_NAME  := Ding Dev
+DEV_BUNDLE_ID := blue.luci.Ding.dev
 # Your Apple developer team ID, for building a copy under your own identity (see README). Empty keeps the project's.
 TEAM ?=
 PROJECT   := $(APP_NAME).xcodeproj
@@ -13,6 +16,10 @@ APP_PATH  := $(BUILD_DIR)/Build/Products/Debug/$(APP_NAME).app
 
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration Debug -derivedDataPath $(BUILD_DIR) -allowProvisioningUpdates \
   DING_BUNDLE_ID=$(BUNDLE_ID) $(if $(TEAM),DEVELOPMENT_TEAM=$(TEAM))
+
+# The same build under the dev identity: separate bundle id (and tests id), product name and app group.
+XCODEBUILD_DEV := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration Debug -derivedDataPath $(BUILD_DIR) -allowProvisioningUpdates \
+  DING_BUNDLE_ID=$(DEV_BUNDLE_ID) DING_TESTS_BUNDLE_ID=$(DEV_BUNDLE_ID).tests 'DING_PRODUCT_NAME=$(DEV_APP_NAME)' $(if $(TEAM),DEVELOPMENT_TEAM=$(TEAM))
 
 .DEFAULT_GOAL := help
 
@@ -31,9 +38,14 @@ run: build stop
 	@echo "Ding is a menu bar app: no Dock icon. Look for the bell at the top right."
 
 .PHONY: stop
-## [Run] Quit a running Ding
+## [Run] Quit the installed Ding (run by hand; the tests never use it)
 stop:
 	-@pkill -x $(APP_NAME) && echo "Stopped $(APP_NAME)" || true
+
+.PHONY: stop-dev
+## [Run] Quit a running Ding Dev, the app the tests launch
+stop-dev:
+	-@pkill -x "$(DEV_APP_NAME)" && echo "Stopped $(DEV_APP_NAME)" || true
 
 .PHONY: mcp-smoke
 ## [Run] Smoke-test the bundled MCP helper: handshake and tool list (Ding need not be running)
@@ -103,7 +115,7 @@ test: test-core test-app test-listing
 ## [Tests] Store-listing tools (Deno): diff/plan logic, Apple's limits, and a check of listing/ (offline, no credentials)
 test-listing: listing-check
 	@command -v deno >/dev/null 2>&1 || { echo "deno not installed — run: brew install deno"; exit 1; }
-	deno test --allow-read scripts/
+	deno test --allow-read --allow-run=make scripts/
 
 .PHONY: listing-check
 ## [Build] Validate listing/ (metadata.json, app.json, screenshots) against Apple's limits (offline)
@@ -119,14 +131,14 @@ test-core:
 	swift test
 
 .PHONY: test-app
-## [Tests] App-layer tests hosted in Ding (quits a running Ding first: it allows one instance)
-test-app: generate stop
+## [Tests] App-layer tests hosted in Ding Dev (quits a running Ding Dev first, never the installed Ding)
+test-app: generate stop-dev
 	@rm -rf $(BUILD_DIR)/test.xcresult
-	$(XCODEBUILD) -quiet test -destination 'platform=macOS' -enableCodeCoverage YES -resultBundlePath $(BUILD_DIR)/test.xcresult
+	$(XCODEBUILD_DEV) -quiet test -destination 'platform=macOS' -enableCodeCoverage YES -resultBundlePath $(BUILD_DIR)/test.xcresult
 
 .PHONY: coverage
 ## [Tests] Run all tests and print line coverage for core and app
-coverage: stop
+coverage: stop-dev
 	@swift test --enable-code-coverage >/dev/null 2>&1 || { echo "core tests failed — run: make test-core"; exit 1; }
 	@echo "── DingCore (swift test) ──"
 	@xcrun llvm-cov report .build/arm64-apple-macosx/debug/DingCorePackageTests.xctest/Contents/MacOS/DingCorePackageTests \
@@ -134,10 +146,10 @@ coverage: stop
 	  | awk '$$1 ~ /\.swift$$|^TOTAL$$/ {printf "  %-28s %8s\n", $$1, $$10}'
 	@$(MAKE) --no-print-directory test-app >/dev/null 2>&1 || { echo "app tests failed — run: make test-app"; exit 1; }
 	@echo "── Ding app (xcodebuild test) ──"
-	@xcrun xccov view --report --files-for-target Ding.app $(BUILD_DIR)/test.xcresult 2>/dev/null \
+	@xcrun xccov view --report --files-for-target "$(DEV_APP_NAME).app" $(BUILD_DIR)/test.xcresult 2>/dev/null \
 	  | awk '$$2 ~ /\.swift$$/ {n=split($$2, p, "/"); printf "  %-28s %8s %s\n", p[n], $$4, $$5}'
 	@xcrun xccov view --report --only-targets $(BUILD_DIR)/test.xcresult 2>/dev/null \
-	  | awk '$$2 == "Ding.app" || $$1 == "Ding.app" {printf "  %-28s %8s %s\n", "TOTAL", $$(NF-1), $$NF}'
+	  | awk '$$2 == "$(DEV_APP_NAME).app" || $$1 == "$(DEV_APP_NAME).app" {printf "  %-28s %8s %s\n", "TOTAL", $$(NF-1), $$NF}'
 
 # ---------------------------------------------------------------------------
 # Release (build box only)
@@ -154,7 +166,7 @@ endif
 # ---------------------------------------------------------------------------
 
 .PHONY: reset-calendar-permission
-## [Utilities] Forget Ding's calendar grant so the permission prompt shows again
+## [Utilities] Forget the installed Ding's calendar grant so the permission prompt shows again (run by hand)
 reset-calendar-permission: stop
 	tccutil reset Calendar $(BUNDLE_ID)
 

@@ -15,6 +15,9 @@ settings:
     DEVELOPMENT_TEAM: 46XLY7Y9P8
     # The one name the bundle IDs and the app group derive from. A copy of Ding overrides it (and the team): see README.
     DING_BUNDLE_ID: blue.luci.Ding
+    # Product name and tests bundle id; the test builds override them to build a separate "Ding Dev" app.
+    DING_PRODUCT_NAME: Ding
+    DING_TESTS_BUNDLE_ID: $(DING_BUNDLE_ID)Tests
 # Third-party packages are pinned to the exact versions that were reviewed; bump them on purpose.
 packages:
   DingCore:
@@ -47,7 +50,7 @@ targets:
     info:
       path: Ding/Info.plist
       properties:
-        CFBundleDisplayName: Ding
+        CFBundleDisplayName: $(DING_PRODUCT_NAME)
         # Read from the build settings so a release can stamp the build number (the commit count).
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
@@ -69,6 +72,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(DING_BUNDLE_ID)
+        PRODUCT_NAME: $(DING_PRODUCT_NAME)
+        # The module stays Ding whatever the product is called, so tests can `@testable import Ding`.
+        PRODUCT_MODULE_NAME: Ding
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
     scheme:
@@ -86,7 +92,9 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: $(DING_BUNDLE_ID)Tests
+        PRODUCT_BUNDLE_IDENTIFIER: $(DING_TESTS_BUNDLE_ID)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/$(DING_PRODUCT_NAME).app/Contents/MacOS/$(DING_PRODUCT_NAME)
+        BUNDLE_LOADER: $(TEST_HOST)
   ding-mcp:
     type: tool
     platform: macOS
