@@ -62,8 +62,25 @@ Deno.test("no target reachable from test quits, resets or deletes the real app",
 });
 
 Deno.test("test builds use the dev identity and release builds keep the real one", () => {
-  assert(/DEV_BUNDLE_ID\s*:=\s*blue\.luci\.Ding\.dev\s*$/m.test(text));
+  assert(/DEV_BUNDLE_ID\s*:=\s*\$\(BUNDLE_ID\)\.dev\s*$/m.test(text), "the dev id derives from BUNDLE_ID");
   assert(/DEV_APP_NAME\s*:=\s*Ding Dev\s*$/m.test(text));
   assert(/BUNDLE_ID\s*\?=\s*blue\.luci\.Ding\s*$/m.test(text));
   assert(/^test-app:.*\n(?:.*\n)*?.*XCODEBUILD_DEV/m.test(text));
+});
+
+async function devBundleId(args: string[]): Promise<string> {
+  const dir = new URL("..", import.meta.url).pathname;
+  const out = await new Deno.Command("make", {
+    args: ["-C", dir, "-pn", "--no-print-directory", "-f", "Makefile", ...args, "-q", "nonexistent-target"],
+    stdout: "piped",
+    stderr: "null",
+  }).output();
+  const m = new TextDecoder().decode(out.stdout).match(/^DEV_BUNDLE_ID\s*:?=\s*(.*)$/m);
+  assert(m, "DEV_BUNDLE_ID is defined");
+  return m[1].trim();
+}
+
+Deno.test("the dev bundle id is blue.luci.Ding.dev by default and follows a BUNDLE_ID override", async () => {
+  assert((await devBundleId([])) === "blue.luci.Ding.dev");
+  assert((await devBundleId(["BUNDLE_ID=com.example.MyDing"])) === "com.example.MyDing.dev");
 });

@@ -7,7 +7,7 @@ APP_NAME  := Ding
 BUNDLE_ID ?= blue.luci.Ding
 # Test builds use a separate dev app so running the checks never launches, quits or resets the installed Ding.
 DEV_APP_NAME  := Ding Dev
-DEV_BUNDLE_ID := blue.luci.Ding.dev
+DEV_BUNDLE_ID := $(BUNDLE_ID).dev
 # Your Apple developer team ID, for building a copy under your own identity (see README). Empty keeps the project's.
 TEAM ?=
 PROJECT   := $(APP_NAME).xcodeproj
@@ -17,7 +17,7 @@ APP_PATH  := $(BUILD_DIR)/Build/Products/Debug/$(APP_NAME).app
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration Debug -derivedDataPath $(BUILD_DIR) -allowProvisioningUpdates \
   DING_BUNDLE_ID=$(BUNDLE_ID) $(if $(TEAM),DEVELOPMENT_TEAM=$(TEAM))
 
-# The same build under the dev identity: separate bundle id (and tests id), product name and app group.
+# The same build under the dev identity: separate bundle id (and tests id), product name and app group, all derived from BUNDLE_ID.
 XCODEBUILD_DEV := xcodebuild -project $(PROJECT) -scheme $(APP_NAME) -configuration Debug -derivedDataPath $(BUILD_DIR) -allowProvisioningUpdates \
   DING_BUNDLE_ID=$(DEV_BUNDLE_ID) DING_TESTS_BUNDLE_ID=$(DEV_BUNDLE_ID).tests 'DING_PRODUCT_NAME=$(DEV_APP_NAME)' $(if $(TEAM),DEVELOPMENT_TEAM=$(TEAM))
 
