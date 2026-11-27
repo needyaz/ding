@@ -47,4 +47,11 @@ final class SettingsTabTests: IsolatedDefaultsTestCase {
     func testRootSettingsViewRenders() {
         render(SettingsView(model: AppModel.test()))
     }
+
+    func testAboutSectionRendersUnderEveryTab() {
+        render(AboutSection())
+        for tab in SettingsTab.allCases {
+            render(SettingsView(model: AppModel.test(), initialTab: tab, helperPath: .some(nil)))
+        }
+    }
 }

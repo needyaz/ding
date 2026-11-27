@@ -21,6 +21,16 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            tabs
+            Divider()
+            AboutSection()
+        }
+        .frame(width: 480, height: contentHeight)
+        .scenePadding()
+    }
+
+    private var tabs: some View {
         TabView(selection: $selection) {
             GeneralTab()
                 .tabItem { Label("General", systemImage: "gearshape") }
@@ -41,8 +51,6 @@ struct SettingsView: View {
                 .tabItem { Label("AI Access", systemImage: "sparkles") }
                 .tag(SettingsTab.aiAccess)
         }
-        .frame(width: 480, height: contentHeight)
-        .scenePadding()
     }
 
     @ViewBuilder
@@ -52,6 +60,23 @@ struct SettingsView: View {
         } else {
             AssistantsTab()
         }
+    }
+}
+
+// MARK: - About
+
+struct AboutSection: View {
+    var body: some View {
+        HStack(spacing: 14) {
+            Text(AppInfo.versionLine).foregroundStyle(.secondary)
+            Spacer()
+            ForEach(AboutLink.allCases, id: \.self) { link in
+                Button(link.title) { link.open() }
+                    .buttonStyle(.link)
+            }
+        }
+        .font(.callout)
+        .padding(.top, 10)
     }
 }
 

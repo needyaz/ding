@@ -96,7 +96,7 @@ struct MenuContentView: View {
             Button("Preferences…") { model.openSettings() }
             Button("Send Feedback") {
                 model.isMenuPresented = false
-                NSWorkspace.shared.open(AppInfo.feedbackURL)
+                AboutLink.reportProblem.open()
             }
             Spacer()
             Button("Quit") { NSApp.terminate(nil) }

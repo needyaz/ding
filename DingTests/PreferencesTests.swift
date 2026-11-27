@@ -163,8 +163,32 @@ final class PreferencesTests: IsolatedDefaultsTestCase {
         XCTAssertEqual(OpenTarget.current(for: .googleMeet), .defaultBrowser)
     }
 
-    func testFeedbackURLPointsAtGitHubIssues() {
-        XCTAssertEqual(AppInfo.feedbackURL.host, "github.com")
-        XCTAssertTrue(AppInfo.feedbackURL.path.hasSuffix("/ding/issues"))
+    func testFeedbackURLPointsAtFeedbackForm() {
+        XCTAssertEqual(AppInfo.feedbackURL.absoluteString, "https://github.com/needyaz/feedback/issues/new?template=bug.yml&app=Ding%20%28Mac%29")
+    }
+
+    func testVersionTextFormat() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("about-\(UUID().uuidString).bundle")
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        let plist: [String: Any] = ["CFBundleShortVersionString": "1.0", "CFBundleVersion": "412"]
+        try (plist as NSDictionary).write(to: dir.appendingPathComponent("Contents/Info.plist"))
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let saved = AppInfo.bundle
+        AppInfo.bundle = try XCTUnwrap(Bundle(url: dir))
+        defer { AppInfo.bundle = saved }
+        XCTAssertEqual(AppInfo.versionLine, "Version 1.0 (412)")
+    }
+
+    func testAboutLinksOpenTheirURLsThroughTheSeam() {
+        let workspace = RecordingWorkspace()
+        LinkOpener.workspace = workspace
+        defer { LinkOpener.workspace = SystemWorkspace() }
+        AboutLink.allCases.forEach { $0.open() }
+        XCTAssertEqual(workspace.calls, [
+            .open(URL(string: "https://github.com/needyaz/feedback/issues/new?template=bug.yml&app=Ding%20%28Mac%29")!),
+            .open(URL(string: "https://github.com/needyaz/feedback/issues/new?template=feature.yml&app=Ding%20%28Mac%29")!),
+            .open(URL(string: "https://luci.blue/ding")!),
+        ])
+        XCTAssertEqual(AboutLink.allCases.map(\.title), ["Report a problem", "Suggest an idea", "luci.blue"])
     }
 }
