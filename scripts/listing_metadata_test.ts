@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { computeDiff, type Desired, needsEditableVersion, reviewContactFromEnv, validate, versionPlan } from "./listing_metadata.ts";
+import { computeDiff, type Desired, needsEditableVersion, reviewContactFromEnv, validate, versionPlan, withReleaseWhatsNew } from "./listing_metadata.ts";
 
 const desired = (loc: Record<string, string>, review?: Record<string, string>): Desired => ({ localizations: { "en-US": loc }, review });
 
@@ -87,4 +87,20 @@ Deno.test("a new version is blocked while one is with App Review", () => {
   assertEquals(versionPlan({ versionString: "1.0.13", editable: false, state: "WAITING_FOR_REVIEW" }, "1.0.13"), "none", "re-running the same release is fine");
   assertEquals(versionPlan({ versionString: "1.0.13", editable: false, state: "READY_FOR_SALE" }, "1.0.17"), "create");
   assertEquals(versionPlan({ versionString: "1.0", editable: true, state: "PREPARE_FOR_SUBMISSION" }, "1.0.17"), "rename");
+});
+
+Deno.test("RELEASE_WHATS_NEW overrides en-US whatsNew; unset or blank keeps the file", () => {
+  const file = desired({ name: "x", whatsNew: "from file" });
+  assertEquals(withReleaseWhatsNew(file, { RELEASE_WHATS_NEW: "Fresh notes\nline 2" }).localizations["en-US"], { name: "x", whatsNew: "Fresh notes\nline 2" });
+  assertEquals(withReleaseWhatsNew(file, {}), file);
+  assertEquals(withReleaseWhatsNew(file, { RELEASE_WHATS_NEW: "  \n" }), file);
+  assertEquals(file.localizations["en-US"].whatsNew, "from file");
+});
+
+Deno.test("a RELEASE_WHATS_NEW over 4000 characters is refused before anything is sent", () => {
+  const ok = withReleaseWhatsNew(desired({ name: "x" }), { RELEASE_WHATS_NEW: "w".repeat(4000) });
+  assertEquals(validate(ok), []);
+  const bad = withReleaseWhatsNew(desired({ name: "x" }), { RELEASE_WHATS_NEW: "w".repeat(4001) });
+  assertEquals(validate(bad).length, 1);
+  assertEquals(validate(bad)[0].includes("4000"), true);
 });

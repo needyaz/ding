@@ -77,7 +77,7 @@ export function validate(desired: Desired): string[] {
       const spec = FIELDS[field as Field];
       if (!spec) { problems.push(`[${locale}] unknown field "${field}"`); continue; }
       if (typeof value !== "string" || value.length === 0) { problems.push(`[${locale}] ${field} must be a non-empty string`); continue; }
-      if ([...value].length > spec.limit) problems.push(`[${locale}] ${field} is ${[...value].length} characters; Apple allows ${spec.limit}`);
+      if ([...value].length > spec.limit) problems.push(`[${locale}] ${field} is ${[...value].length} characters; Apple allows ${spec.limit}${field === "whatsNew" ? " (check RELEASE_WHATS_NEW or the listing file)" : ""}`);
       if (field.endsWith("Url") && !/^https:\/\/\S+$/.test(value)) problems.push(`[${locale}] ${field} must be an https URL`);
     }
     if (loc.keywords && /,\s|\s,/.test(loc.keywords)) problems.push(`[${locale}] keywords: no spaces around commas (they waste the 100 characters)`);
@@ -151,6 +151,17 @@ export const blockedMessage = (versionString: string, state: string, wanted: str
 export function needsEditableVersion(change: Change, localeExistsOnStore: boolean): boolean {
   if (change.section === "info") return true;
   return !(change.field === "promotionalText" && localeExistsOnStore);
+}
+
+/**
+ * The public What's New text for the release, from RELEASE_WHATS_NEW. Unset or blank means the file decides.
+ * It overrides en-US whatsNew; the length limit is enforced by validate() before anything is sent.
+ */
+export function withReleaseWhatsNew(desired: Desired, env: Record<string, string>): Desired {
+  const text = env.RELEASE_WHATS_NEW;
+  if (text === undefined || text.trim() === "") return desired;
+  const en = { ...desired.localizations["en-US"], whatsNew: text };
+  return { ...desired, localizations: { ...desired.localizations, "en-US": en } };
 }
 
 const clip = (text: string) => JSON.stringify(text.length > 70 ? `${text.slice(0, 67)}…` : text);
@@ -360,8 +371,9 @@ function printChanges(changes: Change[]) {
 // ---------------------------------------------------------------------------
 
 async function loadDesired(): Promise<Desired> {
-  const desired = JSON.parse(await Deno.readTextFile(DESIRED_PATH)) as Desired;
-  desired.review = { ...desired.review, ...reviewContactFromEnv(Deno.env.toObject()) };
+  const env = Deno.env.toObject();
+  const desired = withReleaseWhatsNew(JSON.parse(await Deno.readTextFile(DESIRED_PATH)) as Desired, env);
+  desired.review = { ...desired.review, ...reviewContactFromEnv(env) };
   const problems = validate(desired);
   if (problems.length > 0) {
     for (const p of problems) fail(p);
