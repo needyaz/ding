@@ -29,6 +29,7 @@ make menu       # pick a target (or `make` to list them)
 make run        # build and launch; look for the bell in the menu bar
 make test       # core tests, app tests, then the listing tool tests
 make coverage   # run everything and print line coverage
+make build-for-testing  # compile the app and its test targets only (unsigned, nothing runs)
 ```
 
 ### Building your own copy

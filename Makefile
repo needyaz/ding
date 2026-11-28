@@ -136,6 +136,11 @@ test-app: generate stop-dev
 	@rm -rf $(BUILD_DIR)/test.xcresult
 	$(XCODEBUILD_DEV) -quiet test -destination 'platform=macOS' -enableCodeCoverage YES -resultBundlePath $(BUILD_DIR)/test.xcresult
 
+.PHONY: build-for-testing
+## [Build] Compile Ding Dev and the unit-test targets without running anything (unsigned, no provisioning)
+build-for-testing: generate
+	$(subst -allowProvisioningUpdates,,$(XCODEBUILD_DEV)) build-for-testing -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
 .PHONY: coverage
 ## [Tests] Run all tests and print line coverage for core and app
 coverage: stop-dev
